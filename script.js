@@ -8,6 +8,7 @@ import {
 const canvas = document.getElementById("canvas");
 const gl = canvas.getContext("experimental-webgl");
 const shapeSelect = document.getElementById("shapeSelect");
+const allColorSelect = document.getElementById("allColorSelect");
 
 let hexColors = [];
 
@@ -64,6 +65,7 @@ function renderColorSelect() {
       selectedColors[i] = hexToRgb(event.target.value);
       render();
     });
+    colorInput.className = "vertex-color";
     colorInput.value = hexColors[i];
     document.getElementById(`colorSelect${i}`).appendChild(colorInput);
   }
@@ -77,6 +79,19 @@ shapeSelect.addEventListener("change", (event) => {
   gl.clear(gl.COLOR_BUFFER_BIT);
   vertices = [];
   renderColorSelect();
+});
+
+allColorSelect.addEventListener("input", (event) => {
+  hexColors = [];
+  for (let i = 0; i < selectedColors.length; i++) {
+    hexColors[i] = event.target.value;
+    selectedColors[i] = hexToRgb(event.target.value);
+  }
+  const colorInputs = document.getElementsByClassName("vertex-color");
+  for (let i = 0; i < colorInputs.length; i++) {
+    colorInputs[i].value = event.target.value;
+  }
+  render();
 });
 
 const vertexShaderSource =
