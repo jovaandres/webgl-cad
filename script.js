@@ -1,9 +1,9 @@
-const canvas = document.getElementById('canvas');
-const gl = canvas.getContext('webgl');
+const canvas = document.getElementById("canvas");
+const gl = canvas.getContext("experimental-webgl");
 const shapeSelect = document.getElementById("shapeSelect");
 const colorSelect = document.getElementById("colorSelect");
 
-let color = {}
+let selectedColor = { r: 0, g: 0, b: 0 };
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -21,22 +21,24 @@ shapeSelect.addEventListener("change", (event) => {
 });
 
 colorSelect.addEventListener("input", (event) => {
-  color = hexToRgb(event.target.value);
+  selectedColor = hexToRgb(event.target.value);
 });
 
-const vertexShaderSource = `
-        attribute vec2 position;
-  
-        void main() {
-          gl_Position = vec4(position, 0.0, 1.0);
-        }
-      `;
+const vertexShaderSource =
+  "attribute vec3 coordinates;" +
+  "attribute vec3 color;" +
+  "varying vec3 vColor;" +
+  "void main(void) {" +
+  " gl_Position = vec4(coordinates, 1.0);" +
+  "vColor = color;" +
+  "}";
 
-const fragmentShaderSource = `
-        void main() {
-          gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-        }
-      `;
+const fragmentShaderSource =
+  "precision mediump float;" +
+  "varying vec3 vColor;" +
+  "void main(void) {" +
+  "gl_FragColor = vec4(vColor, 1.);" +
+  "}";
 
 // Compile the vertex shader
 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -60,115 +62,106 @@ gl.linkProgram(program);
 gl.useProgram(program);
 
 // Clear the color buffer to white
-gl.clearColor(0.0, 0.0, 0.0, 1.0);
+gl.clearColor(1.0, 1.0, 1.0, 1.0);
 gl.clear(gl.COLOR_BUFFER_BIT);
-
-// Create the vertex buffer
-const vertexBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 
 function drawLine(vertices) {
   const colors = [
-    1.0,
-    1.0,
-    1.0,
-    1.0, // white
-    1.0,
-    0.0,
-    0.0,
-    1.0, // red
-    0.0,
-    1.0,
-    0.0,
-    1.0, // green
-    0.0,
-    0.0,
-    1.0,
-    1.0, // blue
+    selectedColor.r,
+    selectedColor.g,
+    selectedColor.b,
+    selectedColor.r,
+    selectedColor.g,
+    selectedColor.b,
   ];
 
   // Create a vertex buffer
   const vertexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  
-  // const colorBuffer = gl.createBuffer();
-  // gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+  const colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   // Enable the vertex buffer
-  gl.enableVertexAttribArray(0);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  const coordinates = gl.getAttribLocation(program, "coordinates");
+  gl.vertexAttribPointer(coordinates, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(coordinates);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  const programColor = gl.getAttribLocation(program, "color");
+  gl.vertexAttribPointer(programColor, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(programColor);
 
   // Draw the line
   gl.drawArrays(gl.LINES, 0, 2);
 }
 
 function drawSquare(vertices) {
+  console.log(vertices);
+  const side = 0.5;
+  const halfSide = side / 2;
+  const squareVertices = [
+    vertices[0] - halfSide,
+    vertices[1] - halfSide,
+    vertices[0] + halfSide,
+    vertices[1] - halfSide,
+    vertices[0] + halfSide,
+    vertices[1] + halfSide,
+    vertices[0] - halfSide,
+    vertices[1] + halfSide,
+  ];
+
+  let colors = [];
+
+  for (let i = 0; i < 4; i++) {
+    colors.push(selectedColor.r);
+    colors.push(selectedColor.g);
+    colors.push(selectedColor.b);
+  }
+
   // Create a vertex buffer
   const vertexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(squareVertices),
+    gl.STATIC_DRAW
+  );
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  const startX = vertices[0];
-  const startY = vertices[1];
-  const size = 0.1;
-
-  const newVertices = [
-    startX, startY,
-    startX + size, startY,
-    startX + size, startY + size,
-    startX, startY + size,
-    startX, startY
-  ];
-
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(newVertices), gl.STATIC_DRAW);
+  const colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   // Enable the vertex buffer
-  gl.enableVertexAttribArray(0);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  const coordinates = gl.getAttribLocation(program, "coordinates");
+  gl.vertexAttribPointer(coordinates, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(coordinates);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  const programColor = gl.getAttribLocation(program, "color");
+  gl.vertexAttribPointer(programColor, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(programColor);
 
   // Draw the square
-  gl.drawArrays(gl.LINE_LOOP, 0, 5);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 }
 
 function drawRectangle(vertices) {
-  // Create a vertex buffer
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-
-  const startX = vertices[0];
-  const startY = vertices[1];
-  const width = 0.1;
-  const height = 0.05;
-
-  const newVertices = [startX, startY, startX + width, startY, startX + width, startY + height, startX, startY + height, startX, startY];
-
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(newVertices), gl.STATIC_DRAW);
-
-  // Enable the vertex buffer
-  gl.enableVertexAttribArray(0);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-
-  // Draw the rectangle
-  gl.drawArrays(gl.LINE_LOOP, 0, 5);
+  // TODO: Implement
 }
 
 function drawPolygon(vertices) {
-  // Create a vertex buffer
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-  // Enable the vertex buffer
-  gl.enableVertexAttribArray(0);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-
-  // Draw the polygon
-  gl.drawArrays(gl.LINE_LOOP, 0, vertices.length / 2);
+  // TODO: Implement
 }
 
-let isDrawing = false;
 let vertices = [];
 
 function drawShape() {
@@ -193,14 +186,20 @@ canvas.addEventListener("mousedown", function (event) {
   const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
 
-  if (vertices.length >= 4) {
-    vertices = []
-  }
-
   vertices.push(x, y);
 
-  if (vertices.length >= 4) {
+  if (shapeSelect.value === "line" && vertices.length === 4) {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    drawShape()
+    drawShape();
+    vertices = [];
+  }
+
+  if (
+    (shapeSelect.value === "square" || shapeSelect.value === "rectangle") &&
+    vertices.length === 2
+  ) {
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    drawShape();
+    vertices = [];
   }
 });
