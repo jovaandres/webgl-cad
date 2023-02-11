@@ -5,17 +5,99 @@ import {
   drawPolygon,
 } from "./scripts/index.js";
 
+/* --------------------- REFERENCE VARIABLES --------------------- */
+
 const canvas = document.getElementById("canvas");
 const gl = canvas.getContext("experimental-webgl");
 const shapeSelect = document.getElementById("shapeSelect");
 const allColorSelect = document.getElementById("allColorSelect");
 
-let hexColors = [];
+/* -------------------------- VARIABLES -------------------------- */
 
+let hexColors = [];
 let selectedColors = [
   { r: 0, g: 0, b: 0 },
   { r: 0, g: 0, b: 0 },
 ];
+let vertices = [];
+
+//* ---------------------- EVENT LISTENERS ---------------------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderColorSelect();
+});
+
+shapeSelect.addEventListener("change", (event) => {
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  vertices = [];
+  renderColorSelect();
+});
+
+allColorSelect.addEventListener("input", (event) => {
+  hexColors = [];
+  for (let i = 0; i < selectedColors.length; i++) {
+    hexColors[i] = event.target.value;
+    selectedColors[i] = hexToRgb(event.target.value);
+  }
+  const colorInputs = document.getElementsByClassName("vertex-color");
+  for (let i = 0; i < colorInputs.length; i++) {
+    colorInputs[i].value = event.target.value;
+  }
+  render();
+});
+
+canvas.addEventListener("mousedown", function (event) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+  const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+  addVertex(x, y);
+  render();
+  renderColorSelect();
+});
+
+/* -------------------------- FUNCTIONS -------------------------- */
+
+function drawShape() {
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  switch (shapeSelect.value) {
+    case "line":
+      drawLine(vertices, selectedColors, gl, program);
+      break;
+    case "square":
+      drawSquare(vertices, selectedColors, gl, program);
+      break;
+    case "rectangle":
+      drawRectangle(vertices, selectedColors, gl, program);
+      break;
+    case "polygon":
+      drawPolygon(vertices, selectedColors, gl, program);
+      break;
+  }
+}
+
+function render() {
+  if (
+    (shapeSelect.value === "line" || shapeSelect.value === "rectangle") &&
+    vertices.length !== 4
+  ) {
+    return;
+  }
+  if (shapeSelect.value === "polygon" && vertices.length < 6) {
+    return;
+  }
+  drawShape();
+}
+
+function addVertex(x, y) {
+  vertices.push(x, y);
+  if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
+    if (vertices.length >= 4 && vertices.length % 4 === 0) {
+      vertices = vertices.slice(-4);
+    }
+  } else if (shapeSelect.value === "square") {
+    vertices = vertices.slice(-2);
+  }
+}
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -71,28 +153,7 @@ function renderColorSelect() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  renderColorSelect();
-});
-
-shapeSelect.addEventListener("change", (event) => {
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  vertices = [];
-  renderColorSelect();
-});
-
-allColorSelect.addEventListener("input", (event) => {
-  hexColors = [];
-  for (let i = 0; i < selectedColors.length; i++) {
-    hexColors[i] = event.target.value;
-    selectedColors[i] = hexToRgb(event.target.value);
-  }
-  const colorInputs = document.getElementsByClassName("vertex-color");
-  for (let i = 0; i < colorInputs.length; i++) {
-    colorInputs[i].value = event.target.value;
-  }
-  render();
-});
+/* ------------------------- SHADER CODE ------------------------- */
 
 const vertexShaderSource =
   "attribute vec3 coordinates;" +
@@ -110,80 +171,23 @@ const fragmentShaderSource =
   "gl_FragColor = vec4(vColor, 1.);" +
   "}";
 
-// Compile the vertex shader
+/* ------------------------- WEBGL SETUP ------------------------- */
+
 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
 gl.shaderSource(vertexShader, vertexShaderSource);
 gl.compileShader(vertexShader);
 
-// Compile the fragment shader
 const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
 gl.shaderSource(fragmentShader, fragmentShaderSource);
 gl.compileShader(fragmentShader);
 
-// Create the program and attach the shaders
 const program = gl.createProgram();
 gl.attachShader(program, vertexShader);
 gl.attachShader(program, fragmentShader);
 
-// Link the program
 gl.linkProgram(program);
 
-// Use the program
 gl.useProgram(program);
 
-// Clear the color buffer to white
 gl.clearColor(1.0, 1.0, 1.0, 1.0);
 gl.clear(gl.COLOR_BUFFER_BIT);
-
-let vertices = [];
-
-function drawShape() {
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  switch (shapeSelect.value) {
-    case "line":
-      drawLine(vertices, selectedColors, gl, program);
-      break;
-    case "square":
-      drawSquare(vertices, selectedColors, gl, program);
-      break;
-    case "rectangle":
-      drawRectangle(vertices, selectedColors, gl, program);
-      break;
-    case "polygon":
-      drawPolygon(vertices, selectedColors, gl, program);
-      break;
-  }
-}
-
-function render() {
-  if (
-    (shapeSelect.value === "line" || shapeSelect.value === "rectangle") &&
-    vertices.length !== 4
-  ) {
-    return;
-  }
-  if (shapeSelect.value === "polygon" && vertices.length < 6) {
-    return;
-  }
-  drawShape();
-}
-
-function addVertex(x, y) {
-  vertices.push(x, y);
-  if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
-    if (vertices.length >= 4 && vertices.length % 4 === 0) {
-      vertices = vertices.slice(-4);
-    }
-  } else if (shapeSelect.value === "square") {
-    vertices = vertices.slice(-2);
-  }
-}
-
-canvas.addEventListener("mousedown", function (event) {
-  const rect = canvas.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-  const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-  addVertex(x, y);
-  render();
-  renderColorSelect();
-});
