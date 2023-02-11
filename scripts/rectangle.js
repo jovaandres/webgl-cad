@@ -11,10 +11,10 @@ export function drawRectangle(vertices, selectedColor, gl, program) {
   ];
   let colors = [];
 
-  for (let i = 0; i < 4; i++) {
-    colors.push(selectedColor.r);
-    colors.push(selectedColor.g);
-    colors.push(selectedColor.b);
+  for (let i = 0; i < selectedColor.length; i++) {
+    colors.push(selectedColor[i].r);
+    colors.push(selectedColor[i].g);
+    colors.push(selectedColor[i].b);
   }
 
   // Create a vertex buffer

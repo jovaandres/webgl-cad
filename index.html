@@ -11,7 +11,7 @@
   </head>
   <body>
     <div class="content">
-      <div class="toolbar">
+      <div class="toolbar" id="toolbar">
         <div class="shape-toolbar toolbar-component">
           <label for="shapeSelect">Shape:</label>
           <select id="shapeSelect" name="shape">
@@ -21,9 +21,9 @@
             <option value="polygon">Polygon</option>
           </select>
         </div>
-        <div class="color-toolbar toolbar-component">
-          <label for="colorSelect">Color:</label>
-          <input type="color" id="colorSelect" name="color" />
+        <div>
+          <label>Colors:</label>
+          <div id="colorSelect"></div>
         </div>
       </div>
       <div class="canvas-container">

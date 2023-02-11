@@ -1,12 +1,10 @@
 export function drawLine(vertices, selectedColor, gl, program) {
-  const colors = [
-    selectedColor.r,
-    selectedColor.g,
-    selectedColor.b,
-    selectedColor.r,
-    selectedColor.g,
-    selectedColor.b,
-  ];
+  const colors = [];
+  for (let i = 0; i < vertices.length / 2; i++) {
+    colors.push(selectedColor[i].r);
+    colors.push(selectedColor[i].g);
+    colors.push(selectedColor[i].b);
+  }
 
   // Create a vertex buffer
   const vertexBuffer = gl.createBuffer();
@@ -31,5 +29,5 @@ export function drawLine(vertices, selectedColor, gl, program) {
   gl.enableVertexAttribArray(programColor);
 
   // Draw the line
-  gl.drawArrays(gl.LINES, 0, 2);
+  gl.drawArrays(gl.LINES, 0, vertices.length / 2);
 }

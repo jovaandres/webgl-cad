@@ -8,9 +8,13 @@ import {
 const canvas = document.getElementById("canvas");
 const gl = canvas.getContext("experimental-webgl");
 const shapeSelect = document.getElementById("shapeSelect");
-const colorSelect = document.getElementById("colorSelect");
 
-let selectedColor = { r: 0, g: 0, b: 0 };
+let hexColors = [];
+
+let selectedColors = [
+  { r: 0, g: 0, b: 0 },
+  { r: 0, g: 0, b: 0 },
+];
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -23,14 +27,56 @@ function hexToRgb(hex) {
     : null;
 }
 
+function renderColorSelect() {
+  let vertexCount = 0;
+  switch (shapeSelect.value) {
+    case "line":
+      vertexCount = 2;
+      break;
+    case "square":
+      vertexCount = 4;
+      break;
+    case "rectangle":
+      vertexCount = 4;
+      break;
+    case "polygon":
+      vertexCount = vertices.length / 2;
+      break;
+  }
+  document.getElementById("colorSelect").innerHTML = "";
+  for (let i = 0; i < vertexCount; i++) {
+    hexColors[i] = hexColors[i] || "#000000";
+    selectedColors[i] = hexToRgb(hexColors[i]);
+
+    const div = document.createElement("div");
+    div.id = `colorSelect${i}`;
+    div.className = "color-toolbar toolbar-component";
+    document.getElementById("colorSelect").appendChild(div);
+
+    const label = document.createElement("label");
+    label.innerHTML = `Vertex ${i + 1}`;
+    document.getElementById(`colorSelect${i}`).appendChild(label);
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.addEventListener("input", (event) => {
+      hexColors[i] = event.target.value;
+      selectedColors[i] = hexToRgb(event.target.value);
+      render();
+    });
+    colorInput.value = hexColors[i];
+    document.getElementById(`colorSelect${i}`).appendChild(colorInput);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderColorSelect();
+});
+
 shapeSelect.addEventListener("change", (event) => {
   gl.clear(gl.COLOR_BUFFER_BIT);
   vertices = [];
-});
-
-colorSelect.addEventListener("input", (event) => {
-  selectedColor = hexToRgb(event.target.value);
-  render();
+  renderColorSelect();
 });
 
 const vertexShaderSource =
@@ -77,47 +123,40 @@ gl.clear(gl.COLOR_BUFFER_BIT);
 let vertices = [];
 
 function drawShape() {
+  gl.clear(gl.COLOR_BUFFER_BIT);
   switch (shapeSelect.value) {
     case "line":
-      drawLine(vertices, selectedColor, gl, program);
+      drawLine(vertices, selectedColors, gl, program);
       break;
     case "square":
-      drawSquare(vertices, selectedColor, gl, program);
+      drawSquare(vertices, selectedColors, gl, program);
       break;
     case "rectangle":
-      drawRectangle(vertices, selectedColor, gl, program);
+      drawRectangle(vertices, selectedColors, gl, program);
       break;
     case "polygon":
-      drawPolygon(vertices, selectedColor, gl, program);
+      drawPolygon(vertices, selectedColors, gl, program);
       break;
   }
 }
 
 function render() {
-  console.log(vertices);
   if (
     (shapeSelect.value === "line" || shapeSelect.value === "rectangle") &&
-    vertices.length === 4
+    vertices.length !== 4
   ) {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    drawShape();
+    return;
   }
-
-  if (shapeSelect.value === "square" && vertices.length === 2) {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    drawShape();
+  if (shapeSelect.value === "polygon" && vertices.length < 6) {
+    return;
   }
-
-  if (shapeSelect.value === "polygon" && vertices.length >= 6) {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    drawShape();
-  }
+  drawShape();
 }
 
 function addVertex(x, y) {
   vertices.push(x, y);
   if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
-    if (vertices.length % 4 === 0 && vertices.length >= 4) {
+    if (vertices.length >= 4 && vertices.length % 4 === 0) {
       vertices = vertices.slice(-4);
     }
   } else if (shapeSelect.value === "square") {
@@ -131,4 +170,5 @@ canvas.addEventListener("mousedown", function (event) {
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
   addVertex(x, y);
   render();
+  renderColorSelect();
 });
