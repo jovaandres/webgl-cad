@@ -3,22 +3,34 @@
   <head>
     <meta charset="utf-8" />
     <title>WebGL Drawing Example</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <p>
-      Select a shape:
-      <select id="shapeSelect">
-        <option value="line">Line</option>
-        <option value="square">Square</option>
-        <option value="rectangle">Rectangle</option>
-        <option value="polygon">Polygon</option>
-      </select>
-    </p>
-    <p>
-      Select a color:
-      <input type="color" id="colorSelect" />
-    </p>
-    <canvas id="canvas" width="1000" height="1000"></canvas>
+    <div class="content">
+      <div class="toolbar">
+        <div class="shape-toolbar toolbar-component">
+          <label for="shapeSelect">Shape:</label>
+          <select id="shapeSelect" name="shape">
+            <option value="line">Line</option>
+            <option value="square">Square</option>
+            <option value="rectangle">Rectangle</option>
+            <option value="polygon">Polygon</option>
+          </select>
+        </div>
+        <div class="color-toolbar toolbar-component">
+          <label for="colorSelect">Color:</label>
+          <input type="color" id="colorSelect" name="color" />
+        </div>
+      </div>
+      <div class="canvas-container">
+        <canvas id="canvas" width="1000" height="1000"></canvas>
+      </div>
+    </div>
+
     <script src="script.js"></script>
   </body>
 </html>
