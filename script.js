@@ -95,15 +95,15 @@ function drawShape() {
 
 function render() {
   console.log(vertices);
-  if (shapeSelect.value === "line" && vertices.length >= 4) {
+  if (
+    (shapeSelect.value === "line" || shapeSelect.value === "rectangle") &&
+    vertices.length === 4
+  ) {
     gl.clear(gl.COLOR_BUFFER_BIT);
     drawShape();
   }
 
-  if (
-    (shapeSelect.value === "square" || shapeSelect.value === "rectangle") &&
-    vertices.length === 2
-  ) {
+  if (shapeSelect.value === "square" && vertices.length === 2) {
     gl.clear(gl.COLOR_BUFFER_BIT);
     drawShape();
   }
@@ -115,13 +115,12 @@ function render() {
 }
 
 function addVertex(x, y) {
-  if (shapeSelect.value === "line") {
-    vertices.push(x, y);
+  vertices.push(x, y);
+  if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
     if (vertices.length % 4 === 0 && vertices.length >= 4) {
       vertices = vertices.slice(-4);
     }
-  } else {
-    vertices.push(x, y);
+  } else if (shapeSelect.value === "square") {
     vertices = vertices.slice(-2);
   }
 }
@@ -130,8 +129,6 @@ canvas.addEventListener("mousedown", function (event) {
   const rect = canvas.getBoundingClientRect();
   const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-
   addVertex(x, y);
-
   render();
 });

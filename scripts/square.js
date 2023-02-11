@@ -1,5 +1,4 @@
 export function drawSquare(vertices, selectedColor, gl, program) {
-  console.log(vertices);
   const side = 0.5;
   const halfSide = side / 2;
   const squareVertices = [
