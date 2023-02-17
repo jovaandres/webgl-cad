@@ -20,6 +20,7 @@ let selectedColors = [
   { r: 0, g: 0, b: 0 },
 ];
 let vertices = [];
+let isDrawing = false;
 
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
@@ -47,12 +48,31 @@ allColorSelect.addEventListener("input", (event) => {
 });
 
 canvas.addEventListener("mousedown", function (event) {
+  vertices = [];
+  isDrawing = true;
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+  const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+  addVertex(x, y);
+  renderColorSelect();
+});
+
+canvas.addEventListener("mousemove", function (event) {
+  if (!isDrawing) {
+    return;
+  }
   const rect = canvas.getBoundingClientRect();
   const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
   addVertex(x, y);
   render();
   renderColorSelect();
+});
+
+canvas.addEventListener("mouseup", function (event) {
+  isDrawing = false;
+  addVertex(x, y);
+  render();
 });
 
 /* -------------------------- FUNCTIONS -------------------------- */
@@ -76,12 +96,6 @@ function drawShape() {
 }
 
 function render() {
-  if (
-    (shapeSelect.value === "line" || shapeSelect.value === "rectangle") &&
-    vertices.length !== 4
-  ) {
-    return;
-  }
   if (shapeSelect.value === "polygon" && vertices.length < 6) {
     return;
   }
@@ -91,8 +105,10 @@ function render() {
 function addVertex(x, y) {
   vertices.push(x, y);
   if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
-    if (vertices.length >= 4 && vertices.length % 4 === 0) {
-      vertices = vertices.slice(-4);
+    if (vertices.length >= 4) {
+      const firstTwo = vertices.slice(0, 2);
+      const lastTwo = vertices.slice(-2);
+      vertices = firstTwo.concat(lastTwo);
     }
   } else if (shapeSelect.value === "square") {
     vertices = vertices.slice(-2);
@@ -103,10 +119,10 @@ function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16) / 255,
-        g: parseInt(result[2], 16) / 255,
-        b: parseInt(result[3], 16) / 255,
-      }
+      r: parseInt(result[1], 16) / 255,
+      g: parseInt(result[2], 16) / 255,
+      b: parseInt(result[3], 16) / 255,
+    }
     : null;
 }
 
