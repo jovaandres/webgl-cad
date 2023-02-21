@@ -1,38 +1,40 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>WebGL Drawing Example</title>
-    <link rel="stylesheet" href="style.css" />
-    <link
-      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div class="content">
-      <div class="toolbar" id="toolbar">
-        <div class="shape-toolbar toolbar-component">
-          <label for="shapeSelect">Shape:</label>
-          <select id="shapeSelect" name="shape">
-            <option value="line">Line</option>
-            <option value="square">Square</option>
-            <option value="rectangle">Rectangle</option>
-            <option value="polygon">Polygon</option>
-          </select>
+
+<head>
+  <meta charset="utf-8" />
+  <title>WebGL Drawing Example</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <div class="content">
+    <div class="toolbar" id="toolbar">
+      <div class="shape-toolbar toolbar-component">
+        <label for="shapeSelect">Shape:</label>
+        <select id="shapeSelect" name="shape">
+          <option value="line">Line</option>
+          <option value="square">Square</option>
+          <option value="rectangle">Rectangle</option>
+          <option value="polygon">Polygon</option>
+        </select>
+      </div>
+      <div>
+        <label>Colors:</label>
+        <div class="color-toolbar toolbar-component">
+          <label for="allColorSelect">All</label>
+          <input type="color" id="allColorSelect" name="allColorSelect" value="#000000" />
         </div>
-        <div>
-          <label>Colors:</label>
-          <div class="color-toolbar toolbar-component">
-            <label for="allColorSelect">All</label>
-            <input
-              type="color"
-              id="allColorSelect"
-              name="allColorSelect"
-              value="#000000"
-            />
-          </div>
-          <div id="colorSelect"></div>
+        <div id="colorSelect"></div>
+      </div>
+      <div>
+        <label>Action:</label>
+        <div class="noaction-toolbar toolbar-component">
+          <label for="noactionSelect">Drawing</label>
+          <input type="radio" id="noactionSelect" name="actionSelect" value="noaction" checked />
+          <label for="translateSelect">Translate</label>
+          <input type="radio" id="translateSelect" name="actionSelect" value="translate" />
         </div>
       </div>
       <div class="canvas-container">
@@ -41,5 +43,6 @@
     </div>
 
     <script src="script.js" type="module"></script>
-  </body>
+</body>
+
 </html>

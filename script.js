@@ -20,9 +20,18 @@ let selectedColors = [
   { r: 0, g: 0, b: 0 },
 ];
 let vertices = [];
+let origin = [];
 let isDrawing = false;
 
+let inAction = false;
+let isDragging = false;
+
 //* ---------------------- EVENT LISTENERS ---------------------- */
+
+let radios = document.querySelectorAll('input[type=radio][name="actionSelect"]');
+radios.forEach(radio => radio.addEventListener('change', () => {
+  inAction = radio.value !== 'noaction';
+}));
 
 document.addEventListener("DOMContentLoaded", () => {
   renderColorSelect();
@@ -48,31 +57,53 @@ allColorSelect.addEventListener("input", (event) => {
 });
 
 canvas.addEventListener("mousedown", function (event) {
-  vertices = [];
-  isDrawing = true;
-  const rect = canvas.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-  const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-  addVertex(x, y);
-  renderColorSelect();
+  if (inAction) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+    origin.push(x, y);
+    isDragging = true;
+  } else {
+    vertices = [];
+    isDrawing = true;
+    const rect = canvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+    addVertex(x, y);
+    renderColorSelect();
+  }
 });
 
 canvas.addEventListener("mousemove", function (event) {
-  if (!isDrawing) {
-    return;
+  if (inAction && isDragging) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+    translateVertex(x - origin[0], y - origin[1]);
+    origin = [x, y];
+    render();
+    renderColorSelect();
+  } else {
+    if (!isDrawing) {
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+    addVertex(x, y);
+    render();
+    renderColorSelect();
   }
-  const rect = canvas.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-  const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-  addVertex(x, y);
-  render();
-  renderColorSelect();
 });
 
 canvas.addEventListener("mouseup", function (event) {
-  isDrawing = false;
-  addVertex(x, y);
-  render();
+  if (inAction && isDragging) {
+    isDragging = false;
+  } else {
+    isDrawing = false;
+    addVertex(x, y);
+    render();
+  }
 });
 
 /* -------------------------- FUNCTIONS -------------------------- */
@@ -113,6 +144,16 @@ function addVertex(x, y) {
   } else if (shapeSelect.value === "square") {
     vertices = vertices.slice(-2);
   }
+}
+
+function translateVertex(x, y) {
+  vertices = vertices.map((vertex, index) => {
+    if (index % 2 === 0) {
+      return vertex + x;
+    } else {
+      return vertex + y;
+    }
+  });
 }
 
 function hexToRgb(hex) {
