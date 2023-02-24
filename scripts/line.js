@@ -17,6 +17,12 @@ export const Line = (gl, program) => {
     colors.push(selectedColors[i].b);
   }
 
+  const getVertices = () => vertices;
+  const setVertices = (v) => vertices = v;
+  const getColors = () => colors;
+  const setColors = (c) => colors = c;
+  const getShape = () => "line";
+
   const addVertices = (vertex) => {
     if (vertices.length === 0) {
       vertices[0] = vertex[0];
@@ -29,7 +35,7 @@ export const Line = (gl, program) => {
     }
   };
 
-  const setColors = (color) => {
+  const addColors = (color) => {
     colors = [];
 
     for (let i = 0; i < vertices.length / 2; i++) {
@@ -104,7 +110,12 @@ export const Line = (gl, program) => {
   }
 
   return {
+    getVertices,
+    getColors,
+    getShape,
+    setVertices,
     setColors,
+    addColors,
     addVertices,
     dilateVertices,
     draw,

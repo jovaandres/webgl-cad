@@ -17,6 +17,12 @@ export const Rectangle = (gl, program) => {
     colors.push(selectedColors[i].b);
   }
 
+  const getVertices = () => vertices;
+  const setVertices = (v) => vertices = v;
+  const getColors = () => colors;
+  const setColors = (c) => colors = c;
+  const getShape = () => "rectangle";
+
   const addVertices = (vertex) => {
     if (vertices.length === 0) {
       vertices[0] = vertex[0];
@@ -29,7 +35,7 @@ export const Rectangle = (gl, program) => {
     }
   };
 
-  const setColors = (changeColor) => {
+  const addColors = (changeColor) => {
     colors = [];
     
     for (let i = 0; i < changeColor.length; i++) {
@@ -119,10 +125,15 @@ export const Rectangle = (gl, program) => {
   }
 
   return {
+    getVertices,
+    getColors,
+    getShape,
+    setVertices,
+    setColors,
     addVertices,
     dilateVertices,
     draw,
-    setColors,
+    addColors,
     translateVertices,
   }
 }

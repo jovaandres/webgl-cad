@@ -16,12 +16,18 @@ export const Square = (gl, program) => {
     colors.push(selectedColors[i].b);
   }
 
+  const getVertices = () => vertices;
+  const setVertices = (v) => vertices = v;
+  const getColors = () => colors;
+  const setColors = (c) => colors = c;
+  const getShape = () => "square";
+
   const addVertices = (vertex) => {
     vertices[0] = vertex[0];
     vertices[1] = vertex[1];
   }
 
-  const setColors = (changeColor) => {
+  const addColors = (changeColor) => {
     colors = [];
     
     for (let i = 0; i < changeColor.length; i++) {
@@ -96,7 +102,12 @@ export const Square = (gl, program) => {
   }
 
   return {
+    getVertices,
+    getColors,
+    getShape,
+    setVertices,
     setColors,
+    addColors,
     addVertices,
     dilateVertices,
     draw,

@@ -10,6 +10,10 @@ const shapeSelect = document.getElementById("shapeSelect");
 const allColorSelect = document.getElementById("allColorSelect");
 const sliderContainer = document.querySelector('.slider-container');
 const slider = document.querySelector('#slider');
+const saveButton = document.querySelector('#saveButton');
+const loadButton = document.querySelector('#loadButton');
+const clearButton = document.querySelector('#clearButton');
+const fileInput = document.getElementById("fileInput");
 
 /* -------------------------- VARIABLES -------------------------- */
 
@@ -57,7 +61,7 @@ allColorSelect.addEventListener("input", (event) => {
     colorInputs[i].value = event.target.value;
   }
 
-  drawingObjects[numOfObjects].setColors(selectedColors);
+  drawingObjects[numOfObjects].addColors(selectedColors);
   render();
 });
 
@@ -129,6 +133,83 @@ slider.addEventListener('input', () => {
   render();
 });
 
+saveButton.addEventListener('click', () => {
+  if (drawingObjects.length === 0) return;
+
+  const data = [];
+
+  drawingObjects.forEach(obj => {
+    data.push({
+      vertices: obj.getVertices(),
+      colors: obj.getColors(),
+      shape: obj.getShape(),
+    });
+  });
+
+  const json = JSON.stringify(data);
+
+  const blob = new Blob([json], { type: "application/json" });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "model.json";
+
+  link.click();
+});
+
+loadButton.addEventListener("click", function() {
+  fileInput.click();
+});
+
+fileInput.addEventListener("change", function() {
+  const file = fileInput.files[0];
+
+  const reader = new FileReader();
+  reader.readAsText(file, 'UTF-8');
+
+
+  reader.onload = readerEvent => {
+    const content = readerEvent.target.result;
+    const data = JSON.parse(content);
+
+    drawingObjects = [];
+    data.forEach(obj => {
+      const shape = obj.shape;
+      const vertices = obj.vertices;
+      const colors = obj.colors;
+
+      let drawingObject;
+
+      if (shape === 'line') {
+        drawingObject = Line(gl, program);
+      }
+
+      if (shape === 'rectangle') {
+        drawingObject = Rectangle(gl, program);
+      }
+
+      if (shape === 'square') {
+        drawingObject = Square(gl, program);
+      }
+
+      drawingObject.setVertices(vertices);
+      drawingObject.setColors(colors);
+
+      drawingObjects.push(drawingObject);
+    });
+
+    numOfObjects = drawingObjects.length - 1;
+
+    render();
+  }
+});
+
+clearButton.addEventListener('click', () => {
+  drawingObjects = [];
+  numOfObjects = -1;
+  render();
+});
+
 /* -------------------------- FUNCTIONS -------------------------- */
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -185,7 +266,7 @@ function renderColorSelect() {
       hexColors[i] = event.target.value;
       selectedColors[i] = hexToRgb(event.target.value);
 
-      drawingObjects[numOfObjects].setColors(selectedColors);
+      drawingObjects[numOfObjects].addColors(selectedColors);
       render();
     });
     colorInput.className = "vertex-color";
