@@ -1,3 +1,3 @@
-export function drawPolygon(vertices, selectedColor, gl, program) {
-  // TODO: Implement
+export const Polygon = (gl, program) => {
+  
 }

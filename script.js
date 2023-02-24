@@ -1,9 +1,6 @@
-import {
-  drawLine,
-  drawSquare,
-  drawRectangle,
-  drawPolygon,
-} from "./scripts/index.js";
+import { Line } from "./scripts/line.js";
+import { Rectangle } from "./scripts/rectangle.js";
+import { Square } from "./scripts/square.js";
 
 /* --------------------- REFERENCE VARIABLES --------------------- */
 
@@ -16,33 +13,25 @@ const slider = document.querySelector('#slider');
 
 /* -------------------------- VARIABLES -------------------------- */
 
-let hexColors = [];
-let selectedColors = [
-  { r: 0, g: 0, b: 0 },
-  { r: 0, g: 0, b: 0 },
-];
-let vertices = [];
-let tempVertex = [];
-let origin = [];
-let isDrawing = false;
-let vertexDistances = [];
+let drawingObjects = [];
+let numOfObjects = -1;
 
-let inAction = false;
+let isDrawing = false;
+
+let isTranslating = false;
 let isDragging = false;
 
-let squareSize = 0.5;
+let isDilating = false;
 
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
 let radios = document.querySelectorAll('input[type=radio][name="actionSelect"]');
 radios.forEach(radio => radio.addEventListener('change', () => {
-  inAction = radio.value !== 'noaction';
+  isTranslating = radio.value === 'translate';
+  isDilating = radio.value === 'dilate';
 
   if (radio.value === 'dilate') {
     sliderContainer.style.display = 'block';
-    tempVertex = []
-    vertexDistances = []
-    squareSize = 0.5;
   } else {
     sliderContainer.style.display = 'none';
   }
@@ -53,8 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 shapeSelect.addEventListener("change", (event) => {
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  vertices = [];
   renderColorSelect();
 });
 
@@ -64,144 +51,85 @@ allColorSelect.addEventListener("input", (event) => {
     hexColors[i] = event.target.value;
     selectedColors[i] = hexToRgb(event.target.value);
   }
+
   const colorInputs = document.getElementsByClassName("vertex-color");
   for (let i = 0; i < colorInputs.length; i++) {
     colorInputs[i].value = event.target.value;
   }
+
+  drawingObjects[numOfObjects].setColors(selectedColors);
   render();
 });
 
 canvas.addEventListener("mousedown", function (event) {
-  if (inAction) {
-    const rect = canvas.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-    origin[0] = x;
-    origin[1] = y;
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+  const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+
+  if (isTranslating) {
     isDragging = true;
-  } else {
-    vertices = [];
-    isDrawing = true;
-    const rect = canvas.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-    addVertex(x, y);
-    renderColorSelect();
+    drawingObjects[numOfObjects].translateVertices([x, y])
+    return;
+  }
+
+  if (isDilating) return;
+
+  isDrawing = true;
+  numOfObjects++;
+
+  if (shapeSelect.value === "line") {
+    const line = Line(gl, program);
+    line.addVertices([x, y])
+    drawingObjects.push(line);
+  }
+
+  if (shapeSelect.value === "rectangle") {
+    const rectangle = Rectangle(gl, program);
+    rectangle.addVertices([x, y])
+    drawingObjects.push(rectangle);
+  }
+
+  if (shapeSelect.value === "square") {
+    const square = Square(gl, program);
+    square.addVertices([x, y])
+    drawingObjects.push(square);
   }
 });
 
 canvas.addEventListener("mousemove", function (event) {
-  if (inAction && isDragging) {
-    const rect = canvas.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-    translateVertex(x - origin[0], y - origin[1]);
-    origin = [x, y];
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
+  const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
+
+  if (isDragging) {
+    drawingObjects[numOfObjects].translateVertices([x, y])
     render();
-    renderColorSelect();
-  } else {
-    if (!isDrawing) {
-      return;
-    }
-    const rect = canvas.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-    const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-    addVertex(x, y);
-    render();
-    renderColorSelect();
   }
+
+  if (!isDrawing) return;
+
+  drawingObjects[numOfObjects].addVertices([x, y])
+  render();
 });
 
 canvas.addEventListener("mouseup", function (event) {
-  if (inAction && isDragging) {
+  if (isDragging) {
     isDragging = false;
-    origin.clear();
-  } else {
-    isDrawing = false;
-    addVertex(x, y);
-    render();
+    return;
   }
+  isDrawing = false;
 });
 
 slider.addEventListener('input', () => {
-  if (vertexDistances.length === 0) {
-    vertexDistances = distanceXY(vertices[0], vertices[1], vertices[2], vertices[3]);
-    tempVertex = vertices;
-  }
+  if (!isDilating) return;
 
   const scale = slider.value;
-  if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
-    vertices = tempVertex.map((vertex, index) => {
-      if (index == 0) {
-        return vertex - vertexDistances[0] * (scale - 1);
-      } else if (index == 1) {
-        return vertex - vertexDistances[1] * (scale - 1);
-      } else if (index == 2) {
-        return vertex + vertexDistances[0] * (scale - 1);
-      } else if (index == 3) {
-        return vertex + vertexDistances[1] * (scale - 1);
-      }
-    });
-  } 
-
-  if (shapeSelect.value === "square") {
-    squareSize = 0.5 + (scale - 1) * 0.5;
-  }
+  drawingObjects[numOfObjects].dilateVertices(scale);
   
   render();
-  renderColorSelect();
 });
 
 /* -------------------------- FUNCTIONS -------------------------- */
-
-function drawShape() {
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  switch (shapeSelect.value) {
-    case "line":
-      drawLine(vertices, selectedColors, gl, program);
-      break;
-    case "square":
-      drawSquare(vertices, squareSize, selectedColors, gl, program);
-      break;
-    case "rectangle":
-      drawRectangle(vertices, selectedColors, gl, program);
-      break;
-    case "polygon":
-      drawPolygon(vertices, selectedColors, gl, program);
-      break;
-  }
-}
-
-function render() {
-  if (shapeSelect.value === "polygon" && vertices.length < 6) {
-    return;
-  }
-  drawShape();
-}
-
-function addVertex(x, y) {
-  vertices.push(x, y);
-  if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
-    if (vertices.length >= 4) {
-      const firstTwo = vertices.slice(0, 2);
-      const lastTwo = vertices.slice(-2);
-      vertices = firstTwo.concat(lastTwo);
-    }
-  } else if (shapeSelect.value === "square") {
-    vertices = vertices.slice(-2);
-  }
-}
-
-function translateVertex(x, y) {
-  vertices = vertices.map((vertex, index) => {
-    if (index % 2 === 0) {
-      return vertex + x;
-    } else {
-      return vertex + y;
-    }
-  });
-}
-
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
@@ -213,9 +141,12 @@ function hexToRgb(hex) {
     : null;
 }
 
-function distanceXY(x1, y1, x2, y2) {
-  return [x2 - x1, y2 - y1];
-}
+
+let hexColors = [];
+let selectedColors = [
+  { r: 0, g: 0, b: 0 },
+  { r: 0, g: 0, b: 0 },
+];
 
 function renderColorSelect() {
   let vertexCount = 0;
@@ -233,6 +164,7 @@ function renderColorSelect() {
       vertexCount = vertices.length / 2;
       break;
   }
+
   document.getElementById("colorSelect").innerHTML = "";
   for (let i = 0; i < vertexCount; i++) {
     hexColors[i] = hexColors[i] || "#000000";
@@ -252,12 +184,21 @@ function renderColorSelect() {
     colorInput.addEventListener("input", (event) => {
       hexColors[i] = event.target.value;
       selectedColors[i] = hexToRgb(event.target.value);
+
+      drawingObjects[numOfObjects].setColors(selectedColors);
       render();
     });
     colorInput.className = "vertex-color";
     colorInput.value = hexColors[i];
     document.getElementById(`colorSelect${i}`).appendChild(colorInput);
   }
+}
+
+function render() {
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  drawingObjects.forEach((object) => {
+    object.draw()
+  });
 }
 
 /* ------------------------- SHADER CODE ------------------------- */
