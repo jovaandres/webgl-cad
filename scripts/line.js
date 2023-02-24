@@ -82,6 +82,45 @@ export const Line = (gl, program) => {
 
   }
 
+  const isObjectSelected = (v) => {
+    let orderedVertices = []
+
+    if (vertices[0] < vertices[2]) {
+      orderedVertices[0] = vertices[0];
+      orderedVertices[2] = vertices[2];
+    } else {
+      orderedVertices[0] = vertices[2];
+      orderedVertices[2] = vertices[0];
+    }
+
+    if (vertices[1] < vertices[3]) {
+      orderedVertices[1] = vertices[1];
+      orderedVertices[3] = vertices[3];
+    } else {
+      orderedVertices[1] = vertices[3];
+      orderedVertices[3] = vertices[1];
+    }
+
+    const x1 = orderedVertices[0];
+    const y1 = orderedVertices[1];
+    const x2 = orderedVertices[2];
+    const y2 = orderedVertices[3];
+
+    const x = v[0];
+    const y = v[1];
+
+    if (x1 - 0.1 <= x && x <= x2 + 0.1 && y1 - 0.1 <= y && y <= y2 + 0.1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  const cleanTempData = () => {
+    copyVertices = [];
+    translateOrigin = [];
+  }
+
   const draw = () => {
     // Create a vertex buffer
     const vertexBuffer = gl.createBuffer();
@@ -110,6 +149,8 @@ export const Line = (gl, program) => {
   }
 
   return {
+    isObjectSelected,
+    cleanTempData,
     getVertices,
     getColors,
     getShape,

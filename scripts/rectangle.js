@@ -82,6 +82,37 @@ export const Rectangle = (gl, program) => {
 
   }
 
+  const isObjectSelected = (v) => {
+    let orderedVertices = []
+
+    if (vertices[0] < vertices[2]) {
+      orderedVertices[0] = vertices[0];
+      orderedVertices[2] = vertices[2];
+    } else {
+      orderedVertices[0] = vertices[2];
+      orderedVertices[2] = vertices[0];
+    }
+
+    if (vertices[1] < vertices[3]) {
+      orderedVertices[1] = vertices[1];
+      orderedVertices[3] = vertices[3];
+    } else {
+      orderedVertices[1] = vertices[3];
+      orderedVertices[3] = vertices[1];
+    }
+    
+    if (v[0] > orderedVertices[0] && v[0] < orderedVertices[2] && v[1] > orderedVertices[1] && v[1] < orderedVertices[3]) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  const cleanTempData = () => {
+    copyVertices = [];
+    translateOrigin = [];
+  }
+
   const draw = () => {
     const rectangleVertices = [
       vertices[0],
@@ -125,6 +156,8 @@ export const Rectangle = (gl, program) => {
   }
 
   return {
+    isObjectSelected,
+    cleanTempData,
     getVertices,
     getColors,
     getShape,

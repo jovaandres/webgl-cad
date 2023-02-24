@@ -59,6 +59,21 @@ export const Square = (gl, program) => {
     halfSide = 0.1 * scale;
   }
 
+  const cleanTempData = () => {
+    translateOrigin = [];
+  }
+
+  const isObjectSelected = (vertex) => {
+    if (vertex[0] >= vertices[0] - halfSide &&
+        vertex[0] <= vertices[0] + halfSide &&
+        vertex[1] >= vertices[1] - halfSide &&
+        vertex[1] <= vertices[1] + halfSide) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   const draw = () => {
     const squareVertices = [
       vertices[0] - halfSide,
@@ -102,6 +117,8 @@ export const Square = (gl, program) => {
   }
 
   return {
+    isObjectSelected,
+    cleanTempData,
     getVertices,
     getColors,
     getShape,

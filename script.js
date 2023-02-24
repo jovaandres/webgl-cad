@@ -24,8 +24,10 @@ let isDrawing = false;
 
 let isTranslating = false;
 let isDragging = false;
+let objDraggingNum = -1;
 
 let isDilating = false;
+let objDilateNum = -1;
 
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
@@ -34,8 +36,13 @@ radios.forEach(radio => radio.addEventListener('change', () => {
   isTranslating = radio.value === 'translate';
   isDilating = radio.value === 'dilate';
 
+  if (radio.value === "translate" || radio.value === "dilate") {
+    drawingObjects.forEach(obj => obj.cleanTempData());
+  }
+
   if (radio.value === 'dilate') {
     sliderContainer.style.display = 'block';
+    slider.value = 20;
   } else {
     sliderContainer.style.display = 'none';
   }
@@ -72,11 +79,29 @@ canvas.addEventListener("mousedown", function (event) {
 
   if (isTranslating) {
     isDragging = true;
-    drawingObjects[numOfObjects].translateVertices([x, y])
+
+    for (let i = drawingObjects.length - 1; i >= 0; i--) {
+      if (drawingObjects[i].isObjectSelected([x, y])) {
+        objDraggingNum = i;
+        break;
+      }
+    }
+
+    drawingObjects[objDraggingNum].translateVertices([x, y])
     return;
   }
 
-  if (isDilating) return;
+  if (isDilating) {
+    for (let i = drawingObjects.length - 1; i >= 0; i--) {
+      if (drawingObjects[i].isObjectSelected([x, y])) {
+        objDilateNum = i;
+        break;
+      }
+    }
+    return;
+  } else {
+    objDilateNum = -1;
+  }
 
   isDrawing = true;
   numOfObjects++;
@@ -106,7 +131,8 @@ canvas.addEventListener("mousemove", function (event) {
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
 
   if (isDragging) {
-    drawingObjects[numOfObjects].translateVertices([x, y])
+    if (objDraggingNum === -1) return;
+    drawingObjects[objDraggingNum].translateVertices([x, y])
     render();
   }
 
@@ -119,6 +145,8 @@ canvas.addEventListener("mousemove", function (event) {
 canvas.addEventListener("mouseup", function (event) {
   if (isDragging) {
     isDragging = false;
+    objDraggingNum = -1;
+    drawingObjects.forEach(obj => obj.cleanTempData());
     return;
   }
   isDrawing = false;
@@ -127,8 +155,9 @@ canvas.addEventListener("mouseup", function (event) {
 slider.addEventListener('input', () => {
   if (!isDilating) return;
 
-  const scale = slider.value;
-  drawingObjects[numOfObjects].dilateVertices(scale);
+  const scale = slider.value * 0.05;
+  
+  drawingObjects[objDilateNum].dilateVertices(scale);
   
   render();
 });
