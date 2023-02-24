@@ -11,6 +11,8 @@ const canvas = document.getElementById("canvas");
 const gl = canvas.getContext("experimental-webgl");
 const shapeSelect = document.getElementById("shapeSelect");
 const allColorSelect = document.getElementById("allColorSelect");
+const sliderContainer = document.querySelector('.slider-container');
+const slider = document.querySelector('#slider');
 
 /* -------------------------- VARIABLES -------------------------- */
 
@@ -20,17 +22,30 @@ let selectedColors = [
   { r: 0, g: 0, b: 0 },
 ];
 let vertices = [];
+let tempVertex = [];
 let origin = [];
 let isDrawing = false;
+let vertexDistances = [];
 
 let inAction = false;
 let isDragging = false;
+
+let squareSize = 0.5;
 
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
 let radios = document.querySelectorAll('input[type=radio][name="actionSelect"]');
 radios.forEach(radio => radio.addEventListener('change', () => {
   inAction = radio.value !== 'noaction';
+
+  if (radio.value === 'dilate') {
+    sliderContainer.style.display = 'block';
+    tempVertex = []
+    vertexDistances = []
+    squareSize = 0.5;
+  } else {
+    sliderContainer.style.display = 'none';
+  }
 }));
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -61,7 +76,8 @@ canvas.addEventListener("mousedown", function (event) {
     const rect = canvas.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
     const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
-    origin.push(x, y);
+    origin[0] = x;
+    origin[1] = y;
     isDragging = true;
   } else {
     vertices = [];
@@ -99,11 +115,41 @@ canvas.addEventListener("mousemove", function (event) {
 canvas.addEventListener("mouseup", function (event) {
   if (inAction && isDragging) {
     isDragging = false;
+    origin.clear();
   } else {
     isDrawing = false;
     addVertex(x, y);
     render();
   }
+});
+
+slider.addEventListener('input', () => {
+  if (vertexDistances.length === 0) {
+    vertexDistances = distanceXY(vertices[0], vertices[1], vertices[2], vertices[3]);
+    tempVertex = vertices;
+  }
+
+  const scale = slider.value;
+  if (shapeSelect.value === "line" || shapeSelect.value === "rectangle") {
+    vertices = tempVertex.map((vertex, index) => {
+      if (index == 0) {
+        return vertex - vertexDistances[0] * (scale - 1);
+      } else if (index == 1) {
+        return vertex - vertexDistances[1] * (scale - 1);
+      } else if (index == 2) {
+        return vertex + vertexDistances[0] * (scale - 1);
+      } else if (index == 3) {
+        return vertex + vertexDistances[1] * (scale - 1);
+      }
+    });
+  } 
+
+  if (shapeSelect.value === "square") {
+    squareSize = 0.5 + (scale - 1) * 0.5;
+  }
+  
+  render();
+  renderColorSelect();
 });
 
 /* -------------------------- FUNCTIONS -------------------------- */
@@ -115,7 +161,7 @@ function drawShape() {
       drawLine(vertices, selectedColors, gl, program);
       break;
     case "square":
-      drawSquare(vertices, selectedColors, gl, program);
+      drawSquare(vertices, squareSize, selectedColors, gl, program);
       break;
     case "rectangle":
       drawRectangle(vertices, selectedColors, gl, program);
@@ -165,6 +211,10 @@ function hexToRgb(hex) {
       b: parseInt(result[3], 16) / 255,
     }
     : null;
+}
+
+function distanceXY(x1, y1, x2, y2) {
+  return [x2 - x1, y2 - y1];
 }
 
 function renderColorSelect() {
