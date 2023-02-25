@@ -1,6 +1,7 @@
 import { Line } from "./scripts/line.js";
 import { Rectangle } from "./scripts/rectangle.js";
 import { Square } from "./scripts/square.js";
+import { Polygon } from "./scripts/polygon.js";
 
 /* --------------------- REFERENCE VARIABLES --------------------- */
 
@@ -14,6 +15,8 @@ const saveButton = document.querySelector('#saveButton');
 const loadButton = document.querySelector('#loadButton');
 const clearButton = document.querySelector('#clearButton');
 const fileInput = document.getElementById("fileInput");
+const contPolygonInput = document.getElementById("polygon-input-container")
+const sidesofPolygon = document.getElementById("sides");
 
 /* -------------------------- VARIABLES -------------------------- */
 
@@ -52,8 +55,18 @@ document.addEventListener("DOMContentLoaded", () => {
   renderColorSelect();
 });
 
+sidesofPolygon.addEventListener("input", function(){
+	renderColorSelect()
+})
+
 shapeSelect.addEventListener("change", (event) => {
-  renderColorSelect();
+  if (shapeSelect.value === "polygon"){
+		contPolygonInput.style.display = 'block'
+
+	}else{
+		contPolygonInput.style.display = 'none'
+	}
+	renderColorSelect();
 });
 
 allColorSelect.addEventListener("input", (event) => {
@@ -122,6 +135,13 @@ canvas.addEventListener("mousedown", function (event) {
     const square = Square(gl, program);
     square.addVertices([x, y])
     drawingObjects.push(square);
+  }
+
+  if (shapeSelect.value === "polygon") {
+    const polygon = Polygon(gl, program);
+    polygon.addVertices([x, y],document.getElementById("sides").value)
+    drawingObjects.push(polygon);
+		renderColorSelect()
   }
 });
 
@@ -271,7 +291,7 @@ function renderColorSelect() {
       vertexCount = 4;
       break;
     case "polygon":
-      vertexCount = vertices.length / 2;
+      vertexCount = document.getElementById("sides").value;
       break;
   }
 

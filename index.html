@@ -13,12 +13,15 @@
     <div class="toolbar" id="toolbar">
       <div class="shape-toolbar toolbar-component">
         <label for="shapeSelect">Shape:</label>
-        <select id="shapeSelect" name="shape">
+        <select id="shapeSelect" name="shape" style="height: 30px; width: 150px; font-size: large;">
           <option value="line">Line</option>
           <option value="square">Square</option>
           <option value="rectangle">Rectangle</option>
           <option value="polygon">Polygon</option>
         </select>
+      </div>
+      <div id="polygon-input-container" class="container" style="display: none">
+        <input style="width: 80px; height: 30px; font-size: large;"type="number" id="sides" name="sides" value=3 min=3 max=20>
       </div>
       <div>
         <label>Colors:</label>
@@ -39,21 +42,27 @@
           <input type="radio" id="dilateSelect" name="actionSelect" value="dilate" />
         </div>
       </div>
+      
       <div>
         <div class="slider-container" style="display: none;">
           <input type="range" min="20" max="200" value="20" id="slider">
         </div>
+        <div id="polygon-input-container" class="container" style="display: none">
+          <input style="width: 80px; height: 30px; font-size: large;"type="number" id="sides" name="sides" value=3 min=3 max=20>
+        </div>
+      <div>
+        <br>
       </div>
       <div class="canvas-container">
         <canvas id="canvas" width="1000" height="1000"></canvas>
       </div>
-      <div class="button-container">
-        <button id="saveButton">Save</button>
-        <input type="file" id="fileInput" accept=".json" style="display: none;">
-        <button id="loadButton">Load</button>
-        <button id="clearButton">Clear</button>
+        <div class="button-container">
+          <button id="saveButton">Save</button>
+          <input type="file" id="fileInput" accept=".json" style="display: none;">
+          <button id="loadButton">Load</button>
+          <button id="clearButton">Clear</button>
+        </div>
       </div>
-    </div>
 
     <script src="script.js" type="module"></script>
   </div>
