@@ -475,6 +475,10 @@ fileInput.addEventListener("change", function() {
         drawingObject = Square(gl, program);
       }
 
+      if (shape === 'polygon') {
+        drawingObject = Polygon(gl, program);
+      }
+
       drawingObject.setVertices(vertices);
       drawingObject.setColors(colors);
 
