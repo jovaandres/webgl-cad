@@ -75,60 +75,55 @@ export const Polygon = (gl, program) => {
 			translateOrigin[1] = v[1];
 		}
 	};
-  
+	// Masih ngebug, bingung
 	const dilateVertices = (scale) => {
-	  if (copyVertices.length === 0) {
-		copyVertices = vertices
-	  }
-  
-	  vertices = copyVertices.map((vertex, index) => {
-		if (index == 0) {
-		  return vertex - cornerDistance[0] * (scale - 1);
-		} else if (index == 1) {
-		  return vertex - cornerDistance[1] * (scale - 1);
-		} else if (index == 2) {
-		  return vertex + cornerDistance[0] * (scale - 1);
-		} else if (index == 3) {
-		  return vertex + cornerDistance[1] * (scale - 1);
+		if (copyVertices.length === 0) {
+			copyVertices = vertices
 		}
-	  });
-  
+		const center = copyVertices.reduce((acc, [x, y]) => [acc[0] + x, acc[1] + y], [0, 0]).map(val => val / copyVertices.length);
+		console.log(copyVertices);
+		console.log("HMM");
+		for(let i = 0; i < copyVertices.length; i++){
+			for(let j=0; j < copyVertices[i].length; j++){
+				vertices[i][j] = center[j] + (copyVertices[i][j] - center[j]) * scale
+				console.log(vertices[i][j]);
+			}
+		}
 	}
 
 	function isPointInsidePolygon(point) {
-  // point adalah titik koordinat dalam format [x, y]
-  // polygon adalah array yang berisi titik sudut poligon dalam format [[x1, y1], [x2, y2], [x3, y3], ..., [xn, yn]]
-  
-  // Menghitung jumlah sudut pada poligon
-  const numVertices = vertices.length;
-  
-  // Menginisialisasi variabel penampung
-  let inside = false;
-  
-  // Menghitung koordinat sudut terakhir
-  let lastVertex = vertices[numVertices - 1];
-  let lastX = lastVertex[0];
-  let lastY = lastVertex[1];
-  
-  // Melakukan perulangan untuk setiap sudut poligon
-  for (let i = 0; i < numVertices; i++) {
-    let currentVertex = vertices[i];
-    let currentX = currentVertex[0];
-    let currentY = currentVertex[1];
-    
-    // Memeriksa apakah titik koordinat berada pada garis yang menghubungkan dua sudut poligon
-    if ((currentY > point[1]) != (lastY > point[1]) &&
-        point[0] < ((lastX - currentX) * (point[1] - currentY)) / (lastY - currentY) + currentX) {
-      inside = !inside;
-    }
-    
-    // Menyimpan sudut terakhir
-    lastX = currentX;
-    lastY = currentY;
-  }
-  
-  // Mengembalikan boolean apakah titik koordinat berada di dalam area poligon atau tidak
-  return inside;
+	// point adalah titik koordinat dalam format [x, y]
+	// polygon adalah array yang berisi titik sudut poligon dalam format [[x1, y1], [x2, y2], [x3, y3], ..., [xn, yn]]
+	
+	// Menghitung jumlah sudut pada poligon
+	const numVertices = vertices.length;
+	
+	// Menginisialisasi variabel penampung
+	let inside = false;
+	
+	// Menghitung koordinat sudut terakhir
+	let lastVertex = vertices[numVertices - 1];
+	let lastX = lastVertex[0];
+	let lastY = lastVertex[1];
+	
+	// Melakukan perulangan untuk setiap sudut poligon
+	for (let i = 0; i < numVertices; i++) {
+		let currentVertex = vertices[i];
+		let currentX = currentVertex[0];
+		let currentY = currentVertex[1];
+		
+		// Memeriksa apakah titik koordinat berada pada garis yang menghubungkan dua sudut poligon
+		if ((currentY > point[1]) != (lastY > point[1]) &&
+			point[0] < ((lastX - currentX) * (point[1] - currentY)) / (lastY - currentY) + currentX) {
+		inside = !inside;
+		}
+		
+		// Menyimpan sudut terakhir
+		lastX = currentX;
+		lastY = currentY;
+  	}
+	// Mengembalikan boolean apakah titik koordinat berada di dalam area poligon atau tidak
+	return inside;
 }
   
 	const isObjectSelected = (v) => {
