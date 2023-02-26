@@ -29,6 +29,14 @@ export const Polygon = (gl, program) => {
 		vertices[i] = tempVertices[i]
 	  }
 	};
+
+	const addNewVertex = (v) => {
+		vertices.push[v]
+	}
+
+	const deleteVertex = (idx) => {
+		vertices.splice(idx)
+	}
 	
 	/*
 	Fungsi untuk mengembalikan vertices polygon yang simetris
@@ -198,6 +206,8 @@ export const Polygon = (gl, program) => {
 	  addColors,
 	  translateVertices,
 	  updateVertices,
-	  nearestVertex
+	  nearestVertex,
+	  deleteVertex,
+	  addNewVertex,
 	}
   }

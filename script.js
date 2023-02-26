@@ -41,6 +41,11 @@ let isMoveCorner = false;
 let objMoveCornerNum = -1
 let idxOfVerticesToMove = -1
 
+let addCornerAction = false
+let deleteCornerAction = false
+let objDeleteCornerNum = -1
+let objAddCornerNum = -1
+
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
 let radios = document.querySelectorAll('input[type=radio][name="actionSelect"]');
@@ -49,6 +54,8 @@ radios.forEach(radio => radio.addEventListener('change', () => {
   moveCornerAction = radio.value === 'moveCorner';
   translateAction = radio.value === 'translate';
   dilateAction = radio.value === 'dilate';
+  addCornerAction = radio.value === 'addCorner'
+  deleteCornerAction = radio.value === 'deleteCorner'
 
   if (radio.value === "translate" || radio.value === "dilate") {
     drawingObjects.forEach(obj => obj.cleanTempData());
@@ -108,6 +115,8 @@ canvas.addEventListener("mousedown", function (event) {
   console.log("Translate action : ", translateAction);
   console.log("Dilate action : ", dilateAction);
   console.log("Move Corner action : ", moveCornerAction);
+  console.log("Add Corner action : ", addCornerAction);
+  console.log("Delete Corner action : ", deleteCornerAction);
   const rect = canvas.getBoundingClientRect();
   const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
@@ -185,7 +194,31 @@ canvas.addEventListener("mousedown", function (event) {
         }
       }
     }
-  } 
+  }
+  
+  if(deleteCornerAction){
+    console.log("DELETE CORNER ACTION")
+    for (let i = drawingObjects.length - 1; i >= 0; i--) {
+      if(drawingObjects[i].getShape() === 'polygon'){
+        if (drawingObjects[i].isObjectSelected([x, y])) {
+          objDeleteCornerNum = i;
+          break;
+        }
+      }
+    }
+  }
+
+  if (addCornerAction){
+    console.log("MOVE CORNER ACTION");
+    for(let i = drawingObjects.length - 1; i>= 0; i--){
+      if(drawingObjects[i].getShape() === 'polygon'){
+        if (drawingObjects[i].isObjectSelected([x, y])) {
+          objAddCornerNum = i;
+          break;
+        }
+      }
+    }
+  }
 });
 
 canvas.addEventListener("mousemove", function (event) {
@@ -228,6 +261,37 @@ canvas.addEventListener("mousemove", function (event) {
       drawingObjects[objMoveCornerNum].updateVertices([x,y], idxOfVerticesToMove)
       render()
     }
+  }else if(deleteCornerAction){
+    var isKeyDown = false
+    canvas.addEventListener("keydown", function(event2) {
+      if (event2.code === "Delete" && !isKeyDown) {
+        isKeyDownKeyDown = true;
+        let temp = drawingObjects[objDeleteCornerNum].nearestVertex([x,y])
+        if(temp[0]){
+          drawingObjects[objDeleteCornerNum].deleteVertex(temp[1])
+          render()
+        }
+      }
+    });
+    
+    canvas.addEventListener("keyup", function(event2) {
+      if (event2.code === "Delete") {
+        is = false;
+      }
+    });
+    
+  }else if(addCornerAction){
+    /** 
+    document.addEventListener("keydown", function(event){
+      if (event.code === "Insert"){
+        console.log("Pak eko2");
+        drawingObjects[objAddCornerNum].addNewVertex([x,y])
+        render()
+      }else{
+        return
+      }
+    })
+    */
   }else{
     return
   }
