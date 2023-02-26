@@ -36,6 +36,9 @@ let objTranslateNum = -1;
 let dilateAction = false;
 let objDilateNum = -1;
 
+let editAction = false;
+let objEditNum = -1;
+
 let moveCornerAction = false
 let isMoveCorner = false;
 let objMoveCornerNum = -1
@@ -49,6 +52,7 @@ radios.forEach(radio => radio.addEventListener('change', () => {
   moveCornerAction = radio.value === 'moveCorner';
   translateAction = radio.value === 'translate';
   dilateAction = radio.value === 'dilate';
+  editAction = radio.value === 'edit';
 
   if (radio.value === "translate" || radio.value === "dilate") {
     drawingObjects.forEach(obj => obj.cleanTempData());
@@ -170,6 +174,24 @@ canvas.addEventListener("mousedown", function (event) {
       }
     }
   }
+
+  if (editAction) {
+    console.log("EDIT ACTION");
+    for (let i = drawingObjects.length - 1; i >= 0; i--) {
+      if (drawingObjects[i].isObjectSelected([x, y])) {
+        objEditNum = i;
+
+        if (shapeSelect.value === "line" || shapeSelect.value === "square") {
+          sliderSize.value = drawingObjects[objEditNum].getSize() * 1000;
+        }
+
+        break;
+      }
+    }
+    return;
+  } else {
+    objEditNum = -1;
+  }
   
   if (moveCornerAction){
     console.log("MOVE CORNER ACTION");
@@ -274,7 +296,7 @@ slider.addEventListener('input', () => {
 });
 
 sliderSize.addEventListener('input', () => {
-  if (!isEditing) return;
+  if (!editAction) return;
 
   const scale = sliderSize.value;
 
