@@ -11,14 +11,18 @@ const shapeSelect = document.getElementById("shapeSelect");
 const allColorSelect = document.getElementById("allColorSelect");
 const sliderContainer = document.querySelector('.slider-container');
 const sliderSizeContainer = document.querySelector('.slider-size-container');
+const sliderRectContainer = document.querySelector('.slider-rect-container');
 const slider = document.querySelector('#slider');
 const sliderSize = document.querySelector('#slider-size');
+const sliderRectLength = document.querySelector('#slider-rect-length');
+const sliderRectWidth = document.querySelector('#slider-rect-width');
 const saveButton = document.querySelector('#saveButton');
 const loadButton = document.querySelector('#loadButton');
 const clearButton = document.querySelector('#clearButton');
 const fileInput = document.getElementById("fileInput");
 const contPolygonInput = document.getElementById("polygon-input-container")
 const sidesofPolygon = document.getElementById("sides");
+const polygonAction = document.querySelector(".polygon-action");
 
 /* -------------------------- VARIABLES -------------------------- */
 
@@ -47,7 +51,9 @@ let idxOfVerticesToMove = -1
 let addCornerAction = false
 let deleteCornerAction = false
 let objDeleteCornerNum = -1
+let idxOfVerticesToDelete = -1
 let objAddCornerNum = -1
+let addedVertex = []
 
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
@@ -57,18 +63,30 @@ radios.forEach(radio => radio.addEventListener('change', () => {
   moveCornerAction = radio.value === 'moveCorner';
   translateAction = radio.value === 'translate';
   dilateAction = radio.value === 'dilate';
-  addCornerAction = radio.value === 'addCorner'
-  deleteCornerAction = radio.value === 'deleteCorner'
+  addCornerAction = shapeSelect.value === "polygon" && radio.value === 'addCorner'
+  deleteCornerAction = shapeSelect.value === "polygon" && radio.value === 'deleteCorner'
   editAction = radio.value === 'edit';
+  
+  objDeleteCornerNum = -1
+  idxOfVerticesToDelete = -1
+  objAddCornerNum = -1
+  addedVertex = []
 
   if (radio.value === "translate" || radio.value === "dilate") {
     drawingObjects.forEach(obj => obj.cleanTempData());
   }
   
   if (radio.value === "edit") {
-    sliderSizeContainer.style.display = 'block';
+    if (shapeSelect.value == "line" || shapeSelect.value == "square") {
+      sliderSizeContainer.style.display = 'block';
+    } else if (shapeSelect.value == "rectangle") {
+      sliderRectContainer.style.display = 'block';
+    }
   } else {
     sliderSizeContainer.style.display = 'none';
+    sliderRectContainer.style.display = 'none';
+    sliderRectLength.value = 0;
+    sliderRectWidth.value = 0;
   }
 
   if (radio.value === 'dilate') {
@@ -90,10 +108,15 @@ sidesofPolygon.addEventListener("input", function(){
 shapeSelect.addEventListener("change", (event) => {
   if (shapeSelect.value === "polygon"){
 		contPolygonInput.style.display = 'block'
-
+    polygonAction.style.display = 'block'
 	}else{
 		contPolygonInput.style.display = 'none'
+    polygonAction.style.display = 'none'
 	}
+  objDeleteCornerNum = -1
+  idxOfVerticesToDelete = -1
+  objAddCornerNum = -1
+  addedVertex = -1
 	renderColorSelect();
 });
 
@@ -190,6 +213,13 @@ canvas.addEventListener("mousedown", function (event) {
       if (drawingObjects[i].isObjectSelected([x, y])) {
         objEditNum = i;
 
+        if (shapeSelect.value === "rectangle") {
+          const rectSize = drawingObjects[objEditNum].getSize();
+          console.log("RECT SIZE : ", rectSize);
+          sliderRectWidth.value = Math.abs(rectSize[0] * 1000);
+          sliderRectLength.value = Math.abs(rectSize[1] * 1000);
+        }
+
         if (shapeSelect.value === "line" || shapeSelect.value === "square") {
           sliderSize.value = drawingObjects[objEditNum].getSize() * 1000;
         }
@@ -205,15 +235,13 @@ canvas.addEventListener("mousedown", function (event) {
   if (moveCornerAction){
     console.log("MOVE CORNER ACTION");
     for(let i = drawingObjects.length - 1; i>= 0; i--){
-      if(drawingObjects[i].getShape() === "polygon"){
-        let temp = drawingObjects[i].nearestVertex([x,y])
-        if(temp[0]){ //temp[0] return boolean
-          isMoveCorner = true
-          idxOfVerticesToMove = temp[1]
-          objMoveCornerNum = i
-          console.log("--> Object di-Corner Move : ", objMoveCornerNum);
-          console.log("--> Idx Object di-Corner Move : ", idxOfVerticesToMove);
-        }
+      let temp = drawingObjects[i].nearestVertex([x,y])
+      if(temp[0]){ //temp[0] return boolean
+        isMoveCorner = true
+        idxOfVerticesToMove = temp[1]
+        objMoveCornerNum = i
+        console.log("--> Object di-Corner Move : ", objMoveCornerNum);
+        console.log("--> Idx Object di-Corner Move : ", idxOfVerticesToMove);
       }
     }
   }
@@ -222,21 +250,26 @@ canvas.addEventListener("mousedown", function (event) {
     console.log("DELETE CORNER ACTION")
     for (let i = drawingObjects.length - 1; i >= 0; i--) {
       if(drawingObjects[i].getShape() === 'polygon'){
-        if (drawingObjects[i].isObjectSelected([x, y])) {
-          objDeleteCornerNum = i;
-          break;
+        let temp = drawingObjects[i].nearestVertex([x,y])
+        if (temp[0]) {
+          objDeleteCornerNum = i
+          idxOfVerticesToDelete = temp[1]
+          return;
         }
       }
     }
   }
 
   if (addCornerAction){
-    console.log("MOVE CORNER ACTION");
+    console.log("ADD CORNER ACTION");
     for(let i = drawingObjects.length - 1; i>= 0; i--){
       if(drawingObjects[i].getShape() === 'polygon'){
-        if (drawingObjects[i].isObjectSelected([x, y])) {
-          objAddCornerNum = i;
-          break;
+        if (objAddCornerNum == -1) {
+          if (drawingObjects[i].isObjectSelected([x, y])) {
+            objAddCornerNum = i;
+          }
+        } else {
+          addedVertex = [x, y]
         }
       }
     }
@@ -283,37 +316,6 @@ canvas.addEventListener("mousemove", function (event) {
       drawingObjects[objMoveCornerNum].updateVertices([x,y], idxOfVerticesToMove)
       render()
     }
-  }else if(deleteCornerAction){
-    var isKeyDown = false
-    canvas.addEventListener("keydown", function(event2) {
-      if (event2.code === "Delete" && !isKeyDown) {
-        isKeyDownKeyDown = true;
-        let temp = drawingObjects[objDeleteCornerNum].nearestVertex([x,y])
-        if(temp[0]){
-          drawingObjects[objDeleteCornerNum].deleteVertex(temp[1])
-          render()
-        }
-      }
-    });
-    
-    canvas.addEventListener("keyup", function(event2) {
-      if (event2.code === "Delete") {
-        is = false;
-      }
-    });
-    
-  }else if(addCornerAction){
-    /** 
-    document.addEventListener("keydown", function(event){
-      if (event.code === "Insert"){
-        console.log("Pak eko2");
-        drawingObjects[objAddCornerNum].addNewVertex([x,y])
-        render()
-      }else{
-        return
-      }
-    })
-    */
   }else{
     return
   }
@@ -343,6 +345,11 @@ canvas.addEventListener("mouseup", function (event) {
   }else{
     return
   }
+
+  drawingObjects.forEach(obj => {
+    obj.cleanTempData();
+  });
+
   nowDrawing = -1
   objTranslateNum = -1
   isMoveCorner = false
@@ -367,6 +374,45 @@ sliderSize.addEventListener('input', () => {
   if (shapeSelect.value === "line" || shapeSelect.value === "square") {
     drawingObjects[objEditNum].setSize(scale);
   }
+  render();
+});
+
+
+document.addEventListener("keydown", function(event2) {
+  if (event2.code === "Delete") {
+    drawingObjects[objDeleteCornerNum].deleteVertex(idxOfVerticesToDelete)
+    render()
+  }
+});
+  
+document.addEventListener("keydown", function(event){
+  if (event.code === "Insert"){
+    const isAdded = drawingObjects[objAddCornerNum].addNewVertex(addedVertex)
+    if (isAdded) {
+      document.getElementById("sides").value++
+      renderColorSelect()
+      render()
+    }
+  }
+})
+
+sliderRectWidth.addEventListener('input', () => {
+  if (!editAction) return;
+  if (shapeSelect.value !== "rectangle") return;
+
+  const scale = sliderRectWidth.value;
+
+  drawingObjects[objEditNum].setX(scale);
+  render();
+});
+
+sliderRectLength.addEventListener('input', () => {
+  if (!editAction) return;
+  if (shapeSelect.value !== "rectangle") return;
+
+  const scale = sliderRectLength.value;
+
+  drawingObjects[objEditNum].setY(scale);
   render();
 });
 

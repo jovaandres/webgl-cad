@@ -32,6 +32,24 @@ export const Square = (gl, program) => {
     vertices[1] = vertex[1];
   }
 
+	const updateVertices = (newVertex, idx) => {
+		vertices[idx] = newVertex[0];
+    vertices[idx + 1] = newVertex[1];
+	}
+
+	function isInRangeCorner(vAcuan,vtarget){
+		return (vtarget[0] <= vAcuan[0] + 0.05 && vtarget[0] >= vAcuan[0] - 0.05) && (vtarget[1] <= vAcuan[1] + 0.05 && vtarget[1] >= vAcuan[1] - 0.05)
+	}
+
+	function nearestVertex(v){
+		for (let i = 0; i < vertices.length; i += 2){
+			if(isInRangeCorner([vertices[i], vertices[i + 1]], v)){
+				return [true, i]
+			}
+		}
+		return [false, -1]
+	}
+
   const addColors = (changeColor) => {
     colors = [];
     
@@ -136,5 +154,7 @@ export const Square = (gl, program) => {
     dilateVertices,
     draw,
     translateVertices,
+    updateVertices,
+    nearestVertex
   }
 }

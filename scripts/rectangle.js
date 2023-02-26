@@ -2,7 +2,7 @@ export const Rectangle = (gl, program) => {
   let vertices = [];
   let copyVertices = [];
   
-  let cornerDistance = 0;
+  let cornerDistance = [];
   let colors = [];
   let selectedColors = [
     { r: 0, g: 0, b: 0 },
@@ -23,6 +23,16 @@ export const Rectangle = (gl, program) => {
   const setColors = (c) => colors = c;
   const getShape = () => "rectangle";
 
+  const getSize = () => cornerDistance;
+  const setX = (size) => {
+    const scale = size / getSize()[0];
+    dilateXVertices((scale) / 1000);
+  }
+  const setY = (size) => {
+    const scale = size / getSize()[1];
+    dilateYVertices(scale / 1000);
+  }
+
   const addVertices = (vertex) => {
     if (vertices.length === 0) {
       vertices[0] = vertex[0];
@@ -34,6 +44,24 @@ export const Rectangle = (gl, program) => {
       cornerDistance = [vertices[2] - vertices[0], vertices[3] - vertices[1]];
     }
   };
+
+	const updateVertices = (newVertex, idx) => {
+		vertices[idx] = newVertex[0];
+    vertices[idx + 1] = newVertex[1];
+	}
+
+	function isInRangeCorner(vAcuan,vtarget){
+		return (vtarget[0] <= vAcuan[0] + 0.05 && vtarget[0] >= vAcuan[0] - 0.05) && (vtarget[1] <= vAcuan[1] + 0.05 && vtarget[1] >= vAcuan[1] - 0.05)
+	}
+
+	function nearestVertex(v){
+		for (let i = 0; i < vertices.length; i += 2){
+			if(isInRangeCorner([vertices[i], vertices[i + 1]], v)){
+				return [true, i]
+			}
+		}
+		return [false, -1]
+	}
 
   const addColors = (changeColor) => {
     colors = [];
@@ -63,6 +91,38 @@ export const Rectangle = (gl, program) => {
     }
   };
 
+  const dilateXVertices = (scale) => {
+    if (copyVertices.length === 0) {
+      copyVertices = vertices
+    }
+
+    vertices = copyVertices.map((vertex, index) => {
+      if (index == 0) {
+        return vertex - cornerDistance[0] * (scale - 1) / 2;
+      } else if (index == 2) {
+        return vertex + cornerDistance[0] * (scale - 1) / 2;
+      } else {
+        return vertex;
+      }
+    });
+  }
+
+  const dilateYVertices = (scale) => {
+    if (copyVertices.length === 0) {
+      copyVertices = vertices
+    }
+
+    vertices = copyVertices.map((vertex, index) => {
+      if (index == 1) {
+        return vertex - cornerDistance[1] * (scale - 1) / 2;
+      } else if (index == 3) {
+        return vertex + cornerDistance[1] * (scale - 1) / 2;
+      } else {
+        return vertex;
+      }
+    });
+  }
+
   const dilateVertices = (scale) => {
     if (copyVertices.length === 0) {
       copyVertices = vertices
@@ -70,13 +130,13 @@ export const Rectangle = (gl, program) => {
 
     vertices = copyVertices.map((vertex, index) => {
       if (index == 0) {
-        return vertex - cornerDistance[0] * (scale - 1);
+        return vertex - cornerDistance[0] * (scale - 1) / 2;
       } else if (index == 1) {
-        return vertex - cornerDistance[1] * (scale - 1);
+        return vertex - cornerDistance[1] * (scale - 1) / 2;
       } else if (index == 2) {
-        return vertex + cornerDistance[0] * (scale - 1);
+        return vertex + cornerDistance[0] * (scale - 1) / 2;
       } else if (index == 3) {
-        return vertex + cornerDistance[1] * (scale - 1);
+        return vertex + cornerDistance[1] * (scale - 1) / 2;
       }
     });
 
@@ -163,10 +223,15 @@ export const Rectangle = (gl, program) => {
     getShape,
     setVertices,
     setColors,
+    getSize,
+    setX,
+    setY,
     addVertices,
     dilateVertices,
     draw,
     addColors,
     translateVertices,
+    updateVertices,
+    nearestVertex,
   }
 }

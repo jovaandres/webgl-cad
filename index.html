@@ -43,12 +43,14 @@
           <input type="radio" id="translateSelect" name="actionSelect" value="translate" />
           <label for="dilateSelect">Dilatation</label>
           <input type="radio" id="dilateSelect" name="actionSelect" value="dilate" />
-          <label for="moveCorner">Move Polygon Corner</label>
+          <label for="moveCorner">Move Corner</label>
           <input type="radio" id="moveCorner" name="actionSelect" value="moveCorner" />
-          <label for="deleteCorner">Delete Corner</label>
-          <input type="radio" id="deleteCorner" name="actionSelect" value="deleteCorner" />
-          <label for="addCorner">Add Corner</label>
-          <input type="radio" id="addCorner" name="actionSelect" value="addCorner" />
+          <div class="polygon-action" style="display: none;">
+            <label for="deleteCorner">Delete Corner</label>
+            <input type="radio" id="deleteCorner" name="actionSelect" value="deleteCorner" />
+            <label for="addCorner">Add Corner</label>
+            <input type="radio" id="addCorner" name="actionSelect" value="addCorner" />
+          </div>
         </div>
       </div>
 
@@ -59,6 +61,12 @@
         <div>
           <div class="slider-size-container" style="display: none;">
             <input type="range" min="1" max="4000" id="slider-size">
+          </div>
+        </div>
+        <div>
+          <div class="slider-rect-container" style="display: none;">
+            <input type="number" min="1" max="4000" id="slider-rect-length">
+            <input type="number" min="1" max="4000" id="slider-rect-width">
           </div>
         </div>
         <div id="polygon-input-container" class="container" style="display: none">

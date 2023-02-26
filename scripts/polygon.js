@@ -2,7 +2,6 @@ export const Polygon = (gl, program) => {
 	let vertices = [];
 	let copyVertices = [];
 	
-	let cornerDistance = 0;
 	let colors = [];
 	let selectedColors = [
 	  { r: 0, g: 0, b: 0 },
@@ -31,11 +30,16 @@ export const Polygon = (gl, program) => {
 	};
 
 	const addNewVertex = (v) => {
-		vertices.push[v]
+		vertices.push(v)
+		const hull = getConvexHull(vertices);
+		const ordered = orderVertices(hull);
+		const isAdded = ordered.length > vertices.length;
+		vertices = ordered;
+		return isAdded;
 	}
 
 	const deleteVertex = (idx) => {
-		vertices.splice(idx)
+		vertices.splice(idx, 1)
 	}
 	
 	/*
@@ -58,8 +62,7 @@ export const Polygon = (gl, program) => {
 	}
 
 	function isInRangeCorner(vAcuan,vtarget){
-		// range yang dipakai adalah 0.2
-		return (vtarget[0] <= vAcuan[0] + 0.2 && vtarget[0] >= vAcuan[0] - 0.2) && (vtarget[1] <= vAcuan[1] + 0.2 && vtarget[1] >= vAcuan[1] - 0.2)
+		return (vtarget[0] <= vAcuan[0] + 0.05 && vtarget[0] >= vAcuan[0] - 0.05) && (vtarget[1] <= vAcuan[1] + 0.05 && vtarget[1] >= vAcuan[1] - 0.05)
 	}
 
 	function nearestVertex(v){
@@ -154,6 +157,71 @@ export const Polygon = (gl, program) => {
 	  copyVertices = [];
 	  translateOrigin = [];
 	}
+
+	function getConvexHull(points) {
+		// Find the leftmost point
+		let leftmost = 0;
+		for (let i = 1; i < points.length; i++) {
+			if (points[i][0] < points[leftmost][0]) {
+				leftmost = i;
+			}
+		}
+	
+		const hull = [points[leftmost]];
+		let current = leftmost;
+	
+		do {
+			let next = (current + 1) % points.length;
+			for (let i = 0; i < points.length; i++) {
+				if (orientation(points[current], points[i], points[next]) < 0) {
+					next = i;
+				}
+			}
+			current = next;
+			hull.push(points[current]);
+		} while (current != leftmost);
+	
+		return hull;
+	}
+	
+	// Helper function to compute the orientation of three points
+	function orientation(p, q, r) {
+		const val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
+		if (val == 0) {
+			return 0;
+		}
+		return (val > 0) ? 1 : -1;
+	}
+
+	function getReferencePoint(hull) {
+		// Find the point with the smallest y-coordinate
+		let ref = hull[0];
+		for (let i = 1; i < hull.length; i++) {
+			if (hull[i][1] < ref[1]) {
+				ref = hull[i];
+			}
+		}
+		return ref;
+	}
+	
+	function compareAngles(ref, a, b) {
+		const angleA = Math.atan2(a[1] - ref[1], a[0] - ref[0]);
+		const angleB = Math.atan2(b[1] - ref[1], b[0] - ref[0]);
+		if (angleA < angleB) {
+			return -1;
+		}
+		if (angleA > angleB) {
+			return 1;
+		}
+		return 0;
+	}
+	
+	function orderVertices(hull) {
+		const ref = getReferencePoint(hull);
+		const sorted = hull.slice(0);
+		sorted.sort((a, b) => compareAngles(ref, a, b));
+		return sorted;
+	}
   
 	const draw = () => {
 		const polygonVertices = []
@@ -210,4 +278,4 @@ export const Polygon = (gl, program) => {
 	  deleteVertex,
 	  addNewVertex,
 	}
-  }
+}

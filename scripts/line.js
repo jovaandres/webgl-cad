@@ -51,6 +51,24 @@ export const Line = (gl, program) => {
     }
   }
 
+	const updateVertices = (newVertex, idx) => {
+		vertices[idx] = newVertex[0];
+    vertices[idx + 1] = newVertex[1];
+	}
+
+	function isInRangeCorner(vAcuan,vtarget){
+		return (vtarget[0] <= vAcuan[0] + 0.05 && vtarget[0] >= vAcuan[0] - 0.05) && (vtarget[1] <= vAcuan[1] + 0.05 && vtarget[1] >= vAcuan[1] - 0.05)
+	}
+
+	function nearestVertex(v){
+		for (let i = 0; i < vertices.length; i += 2){
+			if(isInRangeCorner([vertices[i], vertices[i + 1]], v)){
+				return [true, i]
+			}
+		}
+		return [false, -1]
+	}
+
   const translateVertices = (v) => {
     if (translateOrigin.length === 0) {
       translateOrigin[0] = v[0];
@@ -115,7 +133,7 @@ export const Line = (gl, program) => {
     const x = v[0];
     const y = v[1];
 
-    if (x1 - 0.1 <= x && x <= x2 + 0.1 && y1 - 0.1 <= y && y <= y2 + 0.1) {
+    if (x1 - 0.05 <= x && x <= x2 + 0.05 && y1 - 0.05 <= y && y <= y2 + 0.05) {
       return true;
     } else {
       return false;
@@ -169,5 +187,7 @@ export const Line = (gl, program) => {
     dilateVertices,
     draw,
     translateVertices,
+    nearestVertex,
+    updateVertices
   }
 }
