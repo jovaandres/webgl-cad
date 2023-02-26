@@ -45,6 +45,23 @@ export const Polygon = (gl, program) => {
 		return tempVertices;
 	}
 
+	const updateVertices = (newVertex, idx) => {
+		vertices[idx] = newVertex;
+	}
+
+	function isInRangeCorner(vAcuan,vtarget){
+		// range yang dipakai adalah 0.2
+		return (vtarget[0] <= vAcuan[0] + 0.2 && vtarget[0] >= vAcuan[0] - 0.2) && (vtarget[1] <= vAcuan[1] + 0.2 && vtarget[1] >= vAcuan[1] - 0.2)
+	}
+
+	function nearestVertex(v){
+		for (let i = 0; i < vertices.length; i++){
+			if(isInRangeCorner(vertices[i], v)){
+				return [true, i]
+			}
+		}
+		return [false, -1]
+	}
 	
 	const addColors = (changeColor) => {
 	  colors = [];
@@ -58,19 +75,14 @@ export const Polygon = (gl, program) => {
   
 	const translateVertices = (v) => {
 		if (translateOrigin.length === 0) {
-			console.log("If");
 			translateOrigin[0] = v[0];
 			translateOrigin[1] = v[1];
 		} else {
-			console.log("else if");
-			console.log(vertices);
 			for(let i = 0; i<vertices.length; i++){
 				for(let j=0; j<vertices[i].length; j++){
 					vertices[i][j] = vertices[i][j] + v[j] - translateOrigin[j]; 
 				}
 			}
-			
-			console.log(vertices);
 			translateOrigin[0] = v[0];
 			translateOrigin[1] = v[1];
 		}
@@ -185,5 +197,7 @@ export const Polygon = (gl, program) => {
 	  draw,
 	  addColors,
 	  translateVertices,
+	  updateVertices,
+	  nearestVertex
 	}
   }

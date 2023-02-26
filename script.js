@@ -21,23 +21,32 @@ const sidesofPolygon = document.getElementById("sides");
 /* -------------------------- VARIABLES -------------------------- */
 
 let drawingObjects = [];
+let cornerOfPolygon = []
 let numOfObjects = -1;
 
-let isDrawing = false;
+let nowDrawing = -1
 
-let isTranslating = false;
-let isDragging = false;
-let objDraggingNum = -1;
+let drawingAction = true;
 
-let isDilating = false;
+let translateAction = false;
+let objTranslateNum = -1;
+
+let dilateAction = false;
 let objDilateNum = -1;
+
+let moveCornerAction = false
+let isMoveCorner = false;
+let objMoveCornerNum = -1
+let idxOfVerticesToMove = -1
 
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
 let radios = document.querySelectorAll('input[type=radio][name="actionSelect"]');
 radios.forEach(radio => radio.addEventListener('change', () => {
-  isTranslating = radio.value === 'translate';
-  isDilating = radio.value === 'dilate';
+  drawingAction = radio.value === 'noaction'
+  moveCornerAction = radio.value === 'moveCorner';
+  translateAction = radio.value === 'translate';
+  dilateAction = radio.value === 'dilate';
 
   if (radio.value === "translate" || radio.value === "dilate") {
     drawingObjects.forEach(obj => obj.cleanTempData());
@@ -86,94 +95,168 @@ allColorSelect.addEventListener("input", (event) => {
 });
 
 canvas.addEventListener("mousedown", function (event) {
+  console.log("-----------------MOUSE DOWN------------------");
+  console.log("Drawing action : ", drawingAction);
+  console.log("Translate action : ", translateAction);
+  console.log("Dilate action : ", dilateAction);
+  console.log("Move Corner action : ", moveCornerAction);
   const rect = canvas.getBoundingClientRect();
   const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
 
-  if (isTranslating) {
-    isDragging = true;
+  if(drawingAction){
+    numOfObjects++
+    nowDrawing = numOfObjects;
+    console.log("DRAWING ACTION");
+    if (shapeSelect.value === "line") {
+      console.log("Line draw");
+      const line = Line(gl, program);
+      line.addVertices([x, y])
+      drawingObjects.push(line);
+    }
+    if (shapeSelect.value === "rectangle") {
+      console.log("Rectangle draw");
+      const rectangle = Rectangle(gl, program);
+      rectangle.addVertices([x, y])
+      drawingObjects.push(rectangle);
+    }
+    
+    if (shapeSelect.value === "square") {
+      console.log("Square draw");
+      const square = Square(gl, program);
+      square.addVertices([x, y])
+      drawingObjects.push(square);
+      render()
+    }
+    
+    if (shapeSelect.value === "polygon") {
+      console.log("Polygon draw");
+      const polygon = Polygon(gl, program);
+      polygon.addVertices([x, y],document.getElementById("sides").value)
+      drawingObjects.push(polygon);
+      for(let i = 0; i< polygon.getVertices().length ; i++){
+        cornerOfPolygon.push(polygon.getVertices()[i])
+      }
+      render()
+    }
+  }
+
+  if (translateAction) {
+    console.log("TRANSLATE ACTION", drawingObjects.length);
 
     for (let i = drawingObjects.length - 1; i >= 0; i--) {
       if (drawingObjects[i].isObjectSelected([x, y])) {
-        objDraggingNum = i;
+        objTranslateNum = i;
         break;
       }
     }
-
-    drawingObjects[objDraggingNum].translateVertices([x, y])
-    return;
   }
 
-  if (isDilating) {
+  if (dilateAction) {
+    console.log("DILATE ACTION");
+    isMoveCorner = false;
     for (let i = drawingObjects.length - 1; i >= 0; i--) {
       if (drawingObjects[i].isObjectSelected([x, y])) {
         objDilateNum = i;
         break;
       }
     }
-    return;
-  } else {
-    objDilateNum = -1;
   }
-
-  isDrawing = true;
-  numOfObjects++;
-
-  if (shapeSelect.value === "line") {
-    const line = Line(gl, program);
-    line.addVertices([x, y])
-    drawingObjects.push(line);
-  }
-
-  if (shapeSelect.value === "rectangle") {
-    const rectangle = Rectangle(gl, program);
-    rectangle.addVertices([x, y])
-    drawingObjects.push(rectangle);
-  }
-
-  if (shapeSelect.value === "square") {
-    const square = Square(gl, program);
-    square.addVertices([x, y])
-    drawingObjects.push(square);
-  }
-
-  if (shapeSelect.value === "polygon") {
-    const polygon = Polygon(gl, program);
-    polygon.addVertices([x, y],document.getElementById("sides").value)
-    drawingObjects.push(polygon);
-		renderColorSelect()
-  }
+  
+  if (moveCornerAction){
+    console.log("MOVE CORNER ACTION");
+    for(let i = drawingObjects.length - 1; i>= 0; i--){
+      if(drawingObjects[i].getShape() === "polygon"){
+        let temp = drawingObjects[i].nearestVertex([x,y])
+        if(temp[0]){ //temp[0] return boolean
+          isMoveCorner = true
+          idxOfVerticesToMove = temp[1]
+          objMoveCornerNum = i
+          console.log("--> Object di-Corner Move : ", objMoveCornerNum);
+          console.log("--> Idx Object di-Corner Move : ", idxOfVerticesToMove);
+        }
+      }
+    }
+  } 
 });
 
 canvas.addEventListener("mousemove", function (event) {
+  console.log("-----------------MOUSE MOVE------------------");
   const rect = canvas.getBoundingClientRect();
   const x = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
   const y = -((event.clientY - rect.top) / canvas.height) * 2 + 1;
 
-  if (isDragging) {
-    if (objDraggingNum === -1) return;
-    drawingObjects[objDraggingNum].translateVertices([x, y])
-    render();
+  if(drawingAction && nowDrawing != -1){
+    if(shapeSelect.value == 'line'){
+      console.log("DRAWING LINE MOVE");
+      drawingObjects[nowDrawing].addVertices([x, y])
+      render()
+    }else if(shapeSelect.value == 'square'){
+      console.log("DRAWING SQUARE MOVE");
+      drawingObjects[nowDrawing].translateVertices([x,y])
+      render()
+      return
+    }else if(shapeSelect.value == 'rectangle'){
+      console.log("DRAWING RECTANGLE MOVE");
+      drawingObjects[nowDrawing].addVertices([x, y])
+      render()
+    }else if(shapeSelect.value == 'polygon'){
+      console.log("DRAWING POLYGON MOVE");
+      drawingObjects[nowDrawing].translateVertices([x,y])
+      render()
+    }  
+  }else if(translateAction){
+    console.log("TRANSLATE MOUSEMOVE1");
+    if(objTranslateNum != -1){
+      console.log("TRANSLATE MOUSEMOVE2");
+      drawingObjects[objTranslateNum].translateVertices([x,y])
+      render()
+    }
+  }else if(dilateAction){
+    return;
+  }else if(moveCornerAction){
+    if (isMoveCorner){
+      if (objMoveCornerNum === -1) return;
+      drawingObjects[objMoveCornerNum].updateVertices([x,y], idxOfVerticesToMove)
+      render()
+    }
+  }else{
+    return
   }
-
-  if (!isDrawing) return;
-
-  drawingObjects[numOfObjects].addVertices([x, y])
-  render();
+  return
 });
 
 canvas.addEventListener("mouseup", function (event) {
-  if (isDragging) {
-    isDragging = false;
-    objDraggingNum = -1;
-    drawingObjects.forEach(obj => obj.cleanTempData());
-    return;
+  console.log("-----------------MOUSE UP------------------");
+  if(drawingAction){
+    console.log("Mouse Up Drawing");
+    if(shapeSelect.value == 'line'){
+
+    }else if(shapeSelect.value == 'square'){
+
+    }else if(shapeSelect.value == 'rectangle'){
+
+    }else if(shapeSelect.value == 'polygon'){
+
+    }
+    
+  }else if(translateAction){
+    
+  }else if(dilateAction){
+
+  }else if(moveCornerAction){
+
+  }else{
+    return
   }
-  isDrawing = false;
+  nowDrawing = -1
+  objTranslateNum = -1
+  isMoveCorner = false
+
 });
 
 slider.addEventListener('input', () => {
-  if (!isDilating) return;
+  if (!dilateAction) return;
 
   const scale = slider.value * 0.05;
   
