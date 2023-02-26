@@ -10,7 +10,9 @@ const gl = canvas.getContext("experimental-webgl");
 const shapeSelect = document.getElementById("shapeSelect");
 const allColorSelect = document.getElementById("allColorSelect");
 const sliderContainer = document.querySelector('.slider-container');
+const sliderSizeContainer = document.querySelector('.slider-size-container');
 const slider = document.querySelector('#slider');
+const sliderSize = document.querySelector('#slider-size');
 const saveButton = document.querySelector('#saveButton');
 const loadButton = document.querySelector('#loadButton');
 const clearButton = document.querySelector('#clearButton');
@@ -50,6 +52,12 @@ radios.forEach(radio => radio.addEventListener('change', () => {
 
   if (radio.value === "translate" || radio.value === "dilate") {
     drawingObjects.forEach(obj => obj.cleanTempData());
+  }
+  
+  if (radio.value === "edit") {
+    sliderSizeContainer.style.display = 'block';
+  } else {
+    sliderSizeContainer.style.display = 'none';
   }
 
   if (radio.value === 'dilate') {
@@ -262,6 +270,17 @@ slider.addEventListener('input', () => {
   
   drawingObjects[objDilateNum].dilateVertices(scale);
   
+  render();
+});
+
+sliderSize.addEventListener('input', () => {
+  if (!isEditing) return;
+
+  const scale = sliderSize.value;
+
+  if (shapeSelect.value === "line" || shapeSelect.value === "square") {
+    drawingObjects[objEditNum].setSize(scale);
+  }
   render();
 });
 
