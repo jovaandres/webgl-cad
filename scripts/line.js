@@ -23,6 +23,12 @@ export const Line = (gl, program) => {
   const setColors = (c) => colors = c;
   const getShape = () => "line";
 
+  const getSize = () => Math.sqrt(Math.pow(cornerDistance[0], 2) + Math.pow(cornerDistance[1], 2));
+  const setSize = (size) => {
+    const scale = size / getSize();
+    dilateVertices(scale / 1000);
+  }
+
   const addVertices = (vertex) => {
     if (vertices.length === 0) {
       vertices[0] = vertex[0];
@@ -70,13 +76,13 @@ export const Line = (gl, program) => {
 
     vertices = copyVertices.map((vertex, index) => {
       if (index == 0) {
-        return vertex - cornerDistance[0] * (scale - 1);
+        return vertex - cornerDistance[0] * (scale - 1) / 2;
       } else if (index == 1) {
-        return vertex - cornerDistance[1] * (scale - 1);
+        return vertex - cornerDistance[1] * (scale - 1) / 2;
       } else if (index == 2) {
-        return vertex + cornerDistance[0] * (scale - 1);
+        return vertex + cornerDistance[0] * (scale - 1) / 2;
       } else if (index == 3) {
-        return vertex + cornerDistance[1] * (scale - 1);
+        return vertex + cornerDistance[1] * (scale - 1) / 2;
       }
     });
 
@@ -149,6 +155,8 @@ export const Line = (gl, program) => {
   }
 
   return {
+    getSize,
+    setSize,
     isObjectSelected,
     cleanTempData,
     getVertices,

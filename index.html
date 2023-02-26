@@ -21,7 +21,8 @@
         </select>
       </div>
       <div id="polygon-input-container" class="container" style="display: none">
-        <input style="width: 80px; height: 30px; font-size: large;"type="number" id="sides" name="sides" value=3 min=3 max=20>
+        <input style="width: 80px; height: 30px; font-size: large;" type="number" id="sides" name="sides" value=3 min=3
+          max=20>
       </div>
       <div>
         <label>Colors:</label>
@@ -36,26 +37,34 @@
         <div class="noaction-toolbar toolbar-component">
           <label for="noactionSelect">Drawing</label>
           <input type="radio" id="noactionSelect" name="actionSelect" value="noaction" checked />
+          <label for="editSelect">Edit</label>
+          <input type="radio" id="editSelect" name="actionSelect" value="edit" />
           <label for="translateSelect">Translate</label>
           <input type="radio" id="translateSelect" name="actionSelect" value="translate" />
           <label for="dilateSelect">Dilatation</label>
           <input type="radio" id="dilateSelect" name="actionSelect" value="dilate" />
         </div>
       </div>
-      
+
       <div>
         <div class="slider-container" style="display: none;">
           <input type="range" min="20" max="200" value="20" id="slider">
         </div>
-        <div id="polygon-input-container" class="container" style="display: none">
-          <input style="width: 80px; height: 30px; font-size: large;"type="number" id="sides" name="sides" value=3 min=3 max=20>
+        <div>
+          <div class="slider-size-container" style="display: none;">
+            <input type="range" min="1" max="4000" id="slider-size">
+          </div>
         </div>
-      <div>
-        <br>
-      </div>
-      <div class="canvas-container">
-        <canvas id="canvas" width="1000" height="1000"></canvas>
-      </div>
+        <div id="polygon-input-container" class="container" style="display: none">
+          <input style="width: 80px; height: 30px; font-size: large;" type="number" id="sides" name="sides" value=3
+            min=3 max=20>
+        </div>
+        <div>
+          <br>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas" width="1000" height="1000"></canvas>
+        </div>
         <div class="button-container">
           <button id="saveButton">Save</button>
           <input type="file" id="fileInput" accept=".json" style="display: none;">
@@ -64,8 +73,8 @@
         </div>
       </div>
 
-    <script src="script.js" type="module"></script>
-  </div>
+      <script src="script.js" type="module"></script>
+    </div>
 </body>
 
 </html>

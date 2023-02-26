@@ -22,6 +22,11 @@ export const Square = (gl, program) => {
   const setColors = (c) => colors = c;
   const getShape = () => "square";
 
+  const getSize = () => halfSide * 2;
+  const setSize = (size) => {
+    halfSide = size / 2000;
+  }
+
   const addVertices = (vertex) => {
     vertices[0] = vertex[0];
     vertices[1] = vertex[1];
@@ -117,6 +122,8 @@ export const Square = (gl, program) => {
   }
 
   return {
+    getSize,
+    setSize,
     isObjectSelected,
     cleanTempData,
     getVertices,

@@ -10,7 +10,9 @@ const gl = canvas.getContext("experimental-webgl");
 const shapeSelect = document.getElementById("shapeSelect");
 const allColorSelect = document.getElementById("allColorSelect");
 const sliderContainer = document.querySelector('.slider-container');
+const sliderSizeContainer = document.querySelector('.slider-size-container');
 const slider = document.querySelector('#slider');
+const sliderSize = document.querySelector('#slider-size');
 const saveButton = document.querySelector('#saveButton');
 const loadButton = document.querySelector('#loadButton');
 const clearButton = document.querySelector('#clearButton');
@@ -32,15 +34,25 @@ let objDraggingNum = -1;
 let isDilating = false;
 let objDilateNum = -1;
 
+let isEditing = false;
+let objEditNum = -1;
+
 //* ---------------------- EVENT LISTENERS ---------------------- */
 
 let radios = document.querySelectorAll('input[type=radio][name="actionSelect"]');
 radios.forEach(radio => radio.addEventListener('change', () => {
   isTranslating = radio.value === 'translate';
   isDilating = radio.value === 'dilate';
+  isEditing = radio.value === 'edit';
 
   if (radio.value === "translate" || radio.value === "dilate") {
     drawingObjects.forEach(obj => obj.cleanTempData());
+  }
+  
+  if (radio.value === "edit") {
+    sliderSizeContainer.style.display = 'block';
+  } else {
+    sliderSizeContainer.style.display = 'none';
   }
 
   if (radio.value === 'dilate') {
@@ -116,6 +128,23 @@ canvas.addEventListener("mousedown", function (event) {
     objDilateNum = -1;
   }
 
+  if (isEditing) {
+    for (let i = drawingObjects.length - 1; i >= 0; i--) {
+      if (drawingObjects[i].isObjectSelected([x, y])) {
+        objEditNum = i;
+
+        if (shapeSelect.value === "line" || shapeSelect.value === "square") {
+          sliderSize.value = drawingObjects[objEditNum].getSize() * 1000;
+        }
+
+        break;
+      }
+    }
+    return;
+  } else {
+    objEditNum = -1;
+  }
+
   isDrawing = true;
   numOfObjects++;
 
@@ -135,6 +164,7 @@ canvas.addEventListener("mousedown", function (event) {
     const square = Square(gl, program);
     square.addVertices([x, y])
     drawingObjects.push(square);
+    render();
   }
 
   if (shapeSelect.value === "polygon") {
@@ -142,6 +172,7 @@ canvas.addEventListener("mousedown", function (event) {
     polygon.addVertices([x, y],document.getElementById("sides").value)
     drawingObjects.push(polygon);
 		renderColorSelect()
+    render();
   }
 });
 
@@ -157,6 +188,8 @@ canvas.addEventListener("mousemove", function (event) {
   }
 
   if (!isDrawing) return;
+
+  if (shapeSelect.value === "square" || shapeSelect.value === "polygon") return;
 
   drawingObjects[numOfObjects].addVertices([x, y])
   render();
@@ -179,6 +212,17 @@ slider.addEventListener('input', () => {
   
   drawingObjects[objDilateNum].dilateVertices(scale);
   
+  render();
+});
+
+sliderSize.addEventListener('input', () => {
+  if (!isEditing) return;
+
+  const scale = sliderSize.value;
+
+  if (shapeSelect.value === "line" || shapeSelect.value === "square") {
+    drawingObjects[objEditNum].setSize(scale);
+  }
   render();
 });
 
